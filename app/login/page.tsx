@@ -3,11 +3,10 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-// The app needs permission to create and write the user's inventory
-// spreadsheet. `drive.file` grants access ONLY to files this app creates —
-// it can never see the user's other Drive files.
-const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
+import {
+  GOOGLE_OAUTH_QUERY_PARAMS,
+  GOOGLE_OAUTH_SCOPES,
+} from "@/lib/google-oauth";
 
 function LoginContent() {
   const [loading, setLoading] = useState(false);
@@ -21,13 +20,8 @@ function LoginContent() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        scopes: GOOGLE_SCOPES,
-        queryParams: {
-          // Required for Google to issue a refresh token, which lets the
-          // app write to the spreadsheet without re-asking every hour.
-          access_type: "offline",
-          prompt: "consent",
-        },
+        scopes: GOOGLE_OAUTH_SCOPES,
+        queryParams: GOOGLE_OAUTH_QUERY_PARAMS,
       },
     });
     if (error) setLoading(false);

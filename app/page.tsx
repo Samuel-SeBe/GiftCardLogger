@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ensureSpreadsheet } from "@/lib/provisioning";
 import HomeActions from "./home-actions";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
@@ -12,6 +13,20 @@ export default async function HomePage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // First visit: create the user's "Gift Card Inventory" spreadsheet.
+  let provisioning;
+  try {
+    provisioning = await ensureSpreadsheet(user.id);
+  } catch (e) {
+    // Don't block the home screen on a hiccup; provisioning is retried on
+    // the next visit and before any save.
+    console.error("Spreadsheet provisioning failed:", e);
+    provisioning = "ready" as const;
+  }
+  if (provisioning === "reauth") {
+    redirect("/reconnect");
   }
 
   return (

@@ -183,6 +183,53 @@ If anything fails, tell Claude exactly what you saw (screenshots help!).
 
 ---
 
+# Step 2 — Let the app create your spreadsheet
+
+The app creates a "Gift Card Inventory" spreadsheet in your Google Drive on
+first visit. For that, it needs two more values in Vercel and one switch
+flipped in Google Cloud.
+
+## Step 2, Part A — Add your Google credentials to Vercel
+
+These are the **Client ID** and **Client Secret** you created in Part B4.
+If you didn't keep them: Google Cloud console → **APIs & Services** →
+**Credentials** → click your `Gift Card Logger Web` client — the Client ID
+is shown, and the secret is under "Client secrets".
+
+1. Vercel → your project → **Settings** → **Environment Variables**.
+2. Add these two:
+
+   | Name | Value |
+   |---|---|
+   | `GOOGLE_CLIENT_ID` | ends in `.apps.googleusercontent.com` |
+   | `GOOGLE_CLIENT_SECRET` | starts with `GOCSPX-` |
+
+3. Redeploy so they take effect: **Deployments** tab → **⋯** on the newest
+   deployment → **Redeploy**.
+
+## Step 2, Part B — Publish your Google app
+
+Right now your Google app is in "Testing" mode. Google expires testing-mode
+permissions after 7 days, which would force you to re-approve access every
+week. Publishing fixes that, and because this app only uses a low-risk
+permission, there's no review process.
+
+1. Google Cloud console → **APIs & Services** → **OAuth consent screen**
+   (or "Audience" under Google Auth Platform).
+2. Find **Publishing status: Testing** and click **Publish app** → confirm.
+
+## Step 2, Part C — Test it
+
+1. Open your app (https://gift-card-logger.vercel.app) and make sure you're
+   signed in. The first load may take a couple of extra seconds — that's
+   the app creating your spreadsheet.
+2. Open <https://sheets.google.com> — you should see a new spreadsheet named
+   **Gift Card Inventory** with the columns: Date, Vendor, Card Number,
+   PIN, Value.
+3. It only ever creates one — refreshing the app won't make more.
+
+---
+
 ## Appendix — Running on your own computer (optional, not required)
 
 Developers sometimes run the app locally for faster feedback. You don't
