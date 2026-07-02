@@ -40,6 +40,10 @@ export default function HomeFlow() {
       const res = await fetch("/api/ocr", { method: "POST", body: form });
       const data = await res.json().catch(() => null);
 
+      if (res.status === 402) {
+        router.push("/subscribe");
+        return;
+      }
       if (!res.ok) {
         setPhase({
           name: "error",

@@ -1,0 +1,74 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getStripe, stripeConfigured } from "@/lib/stripe";
+
+// Starts a Stripe Checkout session for the one monthly plan and returns
+// its URL for the browser to redirect to.
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+  if (!stripeConfigured()) {
+    return NextResponse.json(
+      { error: "Billing is not configured" },
+      { status: 503 }
+    );
+  }
+
+  const stripe = getStripe();
+  const admin = createAdminClient();
+
+  const { data: row, error } = await admin
+    .from("users")
+    .select("email, stripe_customer_id")
+    .eq("id", user.id)
+    .single();
+  if (error || !row) {
+    return NextResponse.json({ error: "Account not found" }, { status: 500 });
+  }
+
+  try {
+    let customerId = row.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: row.email,
+        metadata: { user_id: user.id },
+      });
+      customerId = customer.id;
+      await admin
+        .from("users")
+        .update({
+          stripe_customer_id: customerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+    }
+
+    const origin = new URL(request.url).origin;
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [
+        { price: process.env.STRIPE_PRICE_ID!.trim(), quantity: 1 },
+      ],
+      client_reference_id: user.id,
+      subscription_data: { metadata: { user_id: user.id } },
+      allow_promotion_codes: true,
+      success_url: `${origin}/`,
+      cancel_url: `${origin}/subscribe`,
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (e) {
+    console.error("Checkout session failed:", e);
+    return NextResponse.json(
+      { error: "Could not start checkout" },
+      { status: 502 }
+    );
+  }
+}

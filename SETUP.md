@@ -259,6 +259,92 @@ The AI that reads gift cards out of photos is Google Gemini.
 
 ---
 
+# Step 5 — Trial limit, free passes, and Stripe billing
+
+Every account gets 3 free image uploads. After that, the app shows a
+subscription screen. Two kinds of people skip the limit entirely:
+
+- **Paying subscribers** (managed automatically by Stripe)
+- **Free passes** — friends, family, beta testers, and you
+
+## Step 5, Part A — Give yourself (and testers) a free pass
+
+In Supabase → **SQL Editor** → New query:
+
+```sql
+update public.users set subscription_status = 'complimentary' where email = 'someone@example.com';
+```
+
+Run it once per person (they need to have signed in at least once so their
+row exists). Or use **Table Editor** → `users` → edit the person's
+`subscription_status` cell to `complimentary`.
+
+To revoke a pass, set it back to `trial`.
+
+## Step 5, Part B — Create your Stripe product
+
+1. Sign up at <https://stripe.com>. You can skip most of the business
+   questionnaire for now — stay in **Test mode** (toggle in the top right
+   of the dashboard) until launch.
+2. Go to **Product catalog** → **Add product**:
+   - Name: `Gift Card Logger`
+   - Add a price: **Recurring**, **Monthly**, and the amount you choose.
+3. Save, then click the price you just made and copy its **Price ID** —
+   starts with `price_`.
+
+## Step 5, Part C — Keys into Vercel
+
+1. Stripe dashboard → **Developers** → **API keys** → copy the
+   **Secret key** (starts `sk_test_` in test mode).
+2. Vercel → Settings → Environment Variables → add:
+
+   | Name | Value |
+   |---|---|
+   | `STRIPE_SECRET_KEY` | `sk_test_...` |
+   | `STRIPE_PRICE_ID` | `price_...` |
+
+## Step 5, Part D — The webhook (how Stripe tells the app "they paid")
+
+1. Stripe dashboard → **Developers** → **Webhooks** → **Add endpoint**
+   (choose "Add destination"/"Webhook endpoint" if asked).
+2. Endpoint URL:
+
+   ```
+   https://gift-card-logger.vercel.app/api/stripe/webhook
+   ```
+
+3. Select these events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Create it, then copy the endpoint's **Signing secret** (starts
+   `whsec_`).
+5. Vercel → Environment Variables → add:
+
+   | Name | Value |
+   |---|---|
+   | `STRIPE_WEBHOOK_SECRET` | `whsec_...` |
+
+6. Redeploy: **Deployments** → **⋯** → **Redeploy**.
+
+## Step 5, Part E — Test the whole money loop
+
+1. Sign in with a **different Google account** than your own (it gets its
+   own 3 free uploads).
+2. Upload 3 photos, then try a 4th → the subscription screen should appear
+   showing your price.
+3. Tap **Subscribe** → Stripe's checkout opens. Pay with Stripe's test
+   card: number `4242 4242 4242 4242`, any future expiry date, any CVC,
+   any name/postcode.
+4. You land back on the app — uploads now work without limit.
+5. In Stripe → **Customers**, you'll see the test subscription.
+
+No real money moves in test mode. Before launch we swap in live keys
+(that's Step 6).
+
+---
+
 ## Appendix — Running on your own computer (optional, not required)
 
 Developers sometimes run the app locally for faster feedback. You don't

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { extractCardsFromImage } from "@/lib/gemini";
+import { canUpload } from "@/lib/access";
 
 // Accepts one photo, runs OCR, and returns the extracted gift cards.
 // The image lives only in memory for the duration of this request — it is
@@ -13,6 +14,23 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+
+  // Enforce the free-trial limit before doing any work.
+  const admin = createAdminClient();
+  const { data: row, error: rowError } = await admin
+    .from("users")
+    .select("trial_uploads_used, subscription_status")
+    .eq("id", user.id)
+    .single();
+  if (rowError || !row) {
+    return NextResponse.json(
+      { error: "Could not load your account. Please try again." },
+      { status: 500 }
+    );
+  }
+  if (!canUpload(row)) {
+    return NextResponse.json({ error: "trial_expired" }, { status: 402 });
   }
 
   const form = await request.formData();
@@ -36,23 +54,14 @@ export async function POST(request: Request) {
     );
   }
 
-  // Count the successful upload against the free trial. (The upload limit
-  // itself arrives with billing in Step 5.)
-  const admin = createAdminClient();
-  const { data: row } = await admin
+  // Count the successful upload against the free trial.
+  await admin
     .from("users")
-    .select("trial_uploads_used")
-    .eq("id", user.id)
-    .single();
-  if (row) {
-    await admin
-      .from("users")
-      .update({
-        trial_uploads_used: row.trial_uploads_used + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-  }
+    .update({
+      trial_uploads_used: row.trial_uploads_used + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
 
   return NextResponse.json({ cards });
 }
