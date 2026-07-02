@@ -15,10 +15,13 @@ type Phase =
   | { name: "home" }
   | { name: "processing" }
   | { name: "review"; cards: Card[] }
+  | { name: "saving"; cards: Card[] }
+  | { name: "success"; count: number }
+  | { name: "savefail"; cards: Card[]; failed: boolean[] }
   | { name: "error"; message: string };
 
 // The entire primary workflow lives here:
-// Take Photo -> Processing -> Review -> (Save arrives in Step 4)
+// Take Photo -> Processing -> Review -> Save -> Success (repeat)
 export default function HomeFlow() {
   const [phase, setPhase] = useState<Phase>({ name: "home" });
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -71,6 +74,40 @@ export default function HomeFlow() {
     });
   }
 
+  async function saveCards(cards: Card[]) {
+    setPhase({ name: "saving", cards });
+    try {
+      const date = new Date().toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+      });
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cards, date }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (res.status === 409 && data?.error === "reauth") {
+        router.push("/reconnect");
+        return;
+      }
+      if (!res.ok || !Array.isArray(data?.results)) {
+        setPhase({ name: "savefail", cards, failed: cards.map(() => true) });
+        return;
+      }
+      const failed = data.results.map((r: { ok?: boolean }) => !r?.ok);
+      if (failed.some(Boolean)) {
+        setPhase({ name: "savefail", cards, failed });
+      } else {
+        setPhase({ name: "success", count: cards.length });
+      }
+    } catch {
+      setPhase({ name: "savefail", cards, failed: cards.map(() => true) });
+    }
+  }
+
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -106,14 +143,102 @@ export default function HomeFlow() {
     </>
   );
 
-  if (phase.name === "processing") {
+  if (phase.name === "processing" || phase.name === "saving") {
     return (
       <div className="flex flex-col items-center gap-6">
         <div
           className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"
           aria-hidden="true"
         />
-        <p className="text-lg font-medium">Processing Image...</p>
+        <p className="text-lg font-medium">
+          {phase.name === "processing" ? "Processing Image..." : "Saving..."}
+        </p>
+      </div>
+    );
+  }
+
+  if (phase.name === "success") {
+    return (
+      <div className="flex w-full max-w-xs flex-col items-center gap-4 text-center">
+        {fileInputs}
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl dark:bg-green-950"
+          aria-hidden="true"
+        >
+          ✓
+        </div>
+        <h1 className="text-2xl font-bold">Success</h1>
+        <p className="opacity-70">
+          {phase.count} of {phase.count} cards saved.
+        </p>
+        <button
+          onClick={() => cameraInput.current?.click()}
+          className="mt-4 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
+        >
+          Take Next Photo
+        </button>
+        <button
+          onClick={() => libraryInput.current?.click()}
+          className="w-full rounded-2xl border border-black/15 px-6 py-4 text-base font-medium transition active:scale-[0.98] dark:border-white/20"
+        >
+          Choose Existing Photo
+        </button>
+      </div>
+    );
+  }
+
+  if (phase.name === "savefail") {
+    const failedCount = phase.failed.filter(Boolean).length;
+    return (
+      <div className="flex w-full max-w-md flex-col gap-4">
+        <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">
+          Save Failed
+        </h1>
+        <p className="text-sm opacity-70">
+          {failedCount} of {phase.cards.length}{" "}
+          {failedCount === 1 ? "card" : "cards"} could not be written to your
+          spreadsheet. The details are still shown below so you can copy them
+          into your sheet manually.
+        </p>
+        {phase.cards.map((card, i) => (
+          <div
+            key={i}
+            className={`flex flex-col gap-1 rounded-2xl border p-4 text-sm ${
+              phase.failed[i]
+                ? "border-red-400 dark:border-red-700"
+                : "border-black/10 opacity-60 dark:border-white/15"
+            }`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide">
+              {phase.failed[i] ? (
+                <span className="text-red-700 dark:text-red-400">
+                  Not saved
+                </span>
+              ) : (
+                <span className="opacity-60">Saved</span>
+              )}
+            </p>
+            <p>
+              <span className="opacity-60">Vendor:</span> {card.vendor}
+            </p>
+            <p className="break-all">
+              <span className="opacity-60">Card Number:</span>{" "}
+              {card.card_number}
+            </p>
+            <p>
+              <span className="opacity-60">PIN:</span> {card.pin}
+            </p>
+            <p>
+              <span className="opacity-60">Value:</span> {card.value}
+            </p>
+          </div>
+        ))}
+        <button
+          onClick={() => setPhase({ name: "home" })}
+          className="mt-2 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
+        >
+          Done
+        </button>
       </div>
     );
   }
@@ -159,7 +284,7 @@ export default function HomeFlow() {
           </div>
         ))}
         <button
-          onClick={() => alert("Saving to Google Sheets arrives in Step 4!")}
+          onClick={() => saveCards(phase.cards)}
           className="mt-2 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
         >
           Approve &amp; Save

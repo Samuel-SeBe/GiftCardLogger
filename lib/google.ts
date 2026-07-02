@@ -96,3 +96,28 @@ export async function createInventorySpreadsheet(
   const data = await res.json();
   return data.spreadsheetId;
 }
+
+// Appends one row to the bottom of the Inventory worksheet.
+// valueInputOption=RAW stores values exactly as sent, so card numbers keep
+// their leading zeros and dashes instead of being mangled into numbers.
+export async function appendRow(
+  accessToken: string,
+  spreadsheetId: string,
+  row: string[]
+): Promise<void> {
+  const range = encodeURIComponent(`${SHEET_NAME}!A:E`);
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values: [row] }),
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to append row: ${res.status} ${await res.text()}`);
+  }
+}

@@ -16,16 +16,16 @@ export default async function HomePage() {
   }
 
   // First visit: create the user's "Gift Card Inventory" spreadsheet.
-  let provisioning;
+  let needsReauth = false;
   try {
-    provisioning = await ensureSpreadsheet(user.id);
+    const provisioning = await ensureSpreadsheet(user.id);
+    needsReauth = provisioning.status === "reauth";
   } catch (e) {
     // Don't block the home screen on a hiccup; provisioning is retried on
     // the next visit and before any save.
     console.error("Spreadsheet provisioning failed:", e);
-    provisioning = "ready" as const;
   }
-  if (provisioning === "reauth") {
+  if (needsReauth) {
     redirect("/reconnect");
   }
 

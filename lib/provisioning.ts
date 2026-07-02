@@ -6,7 +6,9 @@ import {
   spreadsheetExists,
 } from "@/lib/google";
 
-export type ProvisioningResult = "ready" | "reauth";
+export type ProvisioningResult =
+  | { status: "ready"; spreadsheetId: string; accessToken: string }
+  | { status: "reauth" };
 
 // Makes sure the signed-in user has their inventory spreadsheet: creates
 // it on first visit and recreates it if the user deleted it from Drive.
@@ -27,7 +29,7 @@ export async function ensureSpreadsheet(
     throw new Error(`Failed to load user row: ${error.message}`);
   }
   if (!user.google_refresh_token) {
-    return "reauth";
+    return { status: "reauth" };
   }
 
   let accessToken: string;
@@ -35,7 +37,7 @@ export async function ensureSpreadsheet(
     accessToken = await getGoogleAccessToken(user.google_refresh_token);
   } catch (e) {
     if (e instanceof GoogleReauthRequiredError) {
-      return "reauth";
+      return { status: "reauth" };
     }
     throw e;
   }
@@ -44,7 +46,7 @@ export async function ensureSpreadsheet(
     user.spreadsheet_id &&
     (await spreadsheetExists(accessToken, user.spreadsheet_id))
   ) {
-    return "ready";
+    return { status: "ready", spreadsheetId: user.spreadsheet_id, accessToken };
   }
 
   const spreadsheetId = await createInventorySpreadsheet(accessToken);
@@ -66,5 +68,5 @@ export async function ensureSpreadsheet(
   if (updateError) {
     throw new Error(`Failed to save spreadsheet ID: ${updateError.message}`);
   }
-  return "ready";
+  return { status: "ready", spreadsheetId, accessToken };
 }
