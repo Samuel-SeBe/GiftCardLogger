@@ -230,6 +230,35 @@ permission, there's no review process.
 
 ---
 
+# Step 3 — Give the app its AI key
+
+The AI that reads gift cards out of photos is Google Gemini.
+
+1. Go to <https://aistudio.google.com/app/apikey> and sign in with the same
+   Google account.
+2. Click **Create API key** (pick the `Gift Card Logger` project if asked).
+3. Copy the key — it starts with `AQ.` (older keys start with `AIza`; both
+   work).
+4. Vercel → your project → **Settings** → **Environment Variables** → add:
+
+   | Name | Value |
+   |---|---|
+   | `GEMINI_API_KEY` | your key |
+
+5. Redeploy: **Deployments** tab → **⋯** on the newest deployment →
+   **Redeploy**.
+
+## Step 3 — Test it
+
+1. Open the app on your phone.
+2. Tap **Take Photo** and photograph a gift card (or a few at once).
+3. The app shows "Processing Image..." for a few seconds, then a review
+   screen with the vendor, card number, PIN, and value it read — every
+   field editable.
+4. "Approve & Save" is wired up in Step 4.
+
+---
+
 ## Appendix — Running on your own computer (optional, not required)
 
 Developers sometimes run the app locally for faster feedback. You don't

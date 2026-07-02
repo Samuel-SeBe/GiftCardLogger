@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureSpreadsheet } from "@/lib/provisioning";
-import HomeActions from "./home-actions";
+import HomeFlow from "./home-flow";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
 // action (Choose Existing Photo). Nothing else, per the spec.
@@ -31,7 +31,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-      <HomeActions />
+      <HomeFlow />
     </main>
   );
 }

@@ -32,6 +32,12 @@ export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = path === "/login" || path.startsWith("/auth");
 
+  // API routes speak JSON and enforce auth themselves — a redirect to the
+  // login page would only confuse their callers.
+  if (path.startsWith("/api")) {
+    return response;
+  }
+
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
