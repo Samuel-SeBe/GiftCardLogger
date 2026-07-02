@@ -3,13 +3,15 @@ import {
   createInventorySpreadsheet,
   getGoogleAccessToken,
   GoogleReauthRequiredError,
+  spreadsheetExists,
 } from "@/lib/google";
 
 export type ProvisioningResult = "ready" | "reauth";
 
-// Makes sure the signed-in user has their inventory spreadsheet, creating
-// it on first visit. Returns "reauth" when the user's Google connection is
-// missing or expired and they need to sign in with Google again.
+// Makes sure the signed-in user has their inventory spreadsheet: creates
+// it on first visit and recreates it if the user deleted it from Drive.
+// Returns "reauth" when the user's Google connection is missing or expired
+// and they need to sign in with Google again.
 export async function ensureSpreadsheet(
   userId: string
 ): Promise<ProvisioningResult> {
@@ -23,9 +25,6 @@ export async function ensureSpreadsheet(
 
   if (error) {
     throw new Error(`Failed to load user row: ${error.message}`);
-  }
-  if (user.spreadsheet_id) {
-    return "ready";
   }
   if (!user.google_refresh_token) {
     return "reauth";
@@ -41,16 +40,29 @@ export async function ensureSpreadsheet(
     throw e;
   }
 
+  if (
+    user.spreadsheet_id &&
+    (await spreadsheetExists(accessToken, user.spreadsheet_id))
+  ) {
+    return "ready";
+  }
+
   const spreadsheetId = await createInventorySpreadsheet(accessToken);
 
-  // `.is(null)` guards against two simultaneous first visits both saving:
-  // only the first write wins.
-  const { error: updateError } = await admin
+  // Only replace the exact value we read, so two simultaneous visits can't
+  // both save their own new spreadsheet.
+  let update = admin
     .from("users")
-    .update({ spreadsheet_id: spreadsheetId, updated_at: new Date().toISOString() })
-    .eq("id", userId)
-    .is("spreadsheet_id", null);
+    .update({
+      spreadsheet_id: spreadsheetId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+  update = user.spreadsheet_id
+    ? update.eq("spreadsheet_id", user.spreadsheet_id)
+    : update.is("spreadsheet_id", null);
 
+  const { error: updateError } = await update;
   if (updateError) {
     throw new Error(`Failed to save spreadsheet ID: ${updateError.message}`);
   }

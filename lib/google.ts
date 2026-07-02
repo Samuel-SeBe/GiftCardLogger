@@ -33,6 +33,23 @@ export async function getGoogleAccessToken(
   return data.access_token;
 }
 
+// True when the spreadsheet still exists and is not in the Drive trash.
+// Transient errors count as "exists" so we never create duplicates just
+// because Google had a hiccup.
+export async function spreadsheetExists(
+  accessToken: string,
+  spreadsheetId: string
+): Promise<boolean> {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=trashed`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  if (res.status === 404) return false;
+  if (!res.ok) return true;
+  const data = await res.json();
+  return !data.trashed;
+}
+
 export const SHEET_NAME = "Inventory";
 const SPREADSHEET_TITLE = "Gift Card Inventory";
 const HEADER_ROW = ["Date", "Vendor", "Card Number", "PIN", "Value"];
