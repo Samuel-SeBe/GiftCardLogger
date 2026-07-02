@@ -14,7 +14,7 @@ type Card = {
 type Phase =
   | { name: "home" }
   | { name: "processing" }
-  | { name: "review"; cards: Card[] }
+  | { name: "review"; cards: Card[]; attempted?: boolean }
   | { name: "saving"; cards: Card[] }
   | { name: "success"; count: number }
   | { name: "savefail"; cards: Card[]; failed: boolean[] }
@@ -70,7 +70,7 @@ export default function HomeFlow() {
       const cards = p.cards.map((card, i) =>
         i === index ? { ...card, [field]: value } : card
       );
-      return { name: "review", cards };
+      return { ...p, cards };
     });
   }
 
@@ -244,6 +244,7 @@ export default function HomeFlow() {
   }
 
   if (phase.name === "review") {
+    const missingValue = phase.cards.map((card) => !card.value.trim());
     return (
       <div className="flex w-full max-w-md flex-col gap-4">
         {fileInputs}
@@ -255,6 +256,11 @@ export default function HomeFlow() {
         <p className="text-sm opacity-70">
           Check every field against the physical card, then save.
         </p>
+        {phase.attempted && missingValue.some(Boolean) && (
+          <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+            Enter a value for every card before saving.
+          </p>
+        )}
         {phase.cards.map((card, i) => (
           <div
             key={i}
@@ -280,11 +286,18 @@ export default function HomeFlow() {
               value={card.value}
               onChange={(v) => updateCard(i, "value", v)}
               inputMode="decimal"
+              error={phase.attempted && missingValue[i]}
             />
           </div>
         ))}
         <button
-          onClick={() => saveCards(phase.cards)}
+          onClick={() => {
+            if (missingValue.some(Boolean)) {
+              setPhase({ ...phase, attempted: true });
+              return;
+            }
+            saveCards(phase.cards);
+          }}
           className="mt-2 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
         >
           Approve &amp; Save
@@ -336,11 +349,13 @@ function Field({
   value,
   onChange,
   inputMode,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   inputMode?: "decimal";
+  error?: boolean;
 }) {
   return (
     <label className="flex flex-col gap-1">
@@ -352,8 +367,17 @@ function Field({
         value={value}
         inputMode={inputMode}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-black/15 px-3 py-2 text-base dark:border-white/20 dark:bg-transparent"
+        className={`rounded-lg border px-3 py-2 text-base dark:bg-transparent ${
+          error
+            ? "border-red-500 dark:border-red-600"
+            : "border-black/15 dark:border-white/20"
+        }`}
       />
+      {error && (
+        <span className="text-xs text-red-700 dark:text-red-400">
+          Required
+        </span>
+      )}
     </label>
   );
 }
