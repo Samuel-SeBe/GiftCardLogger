@@ -151,7 +151,19 @@ Supabase only redirects sign-ins back to addresses it trusts.
 1. In Supabase: **Authentication** → **URL Configuration**.
 2. Set **Site URL** to your Vercel address from step D7, e.g.
    `https://gift-card-logger-xxxx.vercel.app`
-3. Click **Save**.
+
+   ⚠️ This must be the **vercel.app** address (your app), NOT the
+   supabase.co address (your database).
+3. Under **Redirect URLs**, click **Add URL** and add your Vercel address
+   followed by `/**` (two asterisks), e.g.
+
+   ```
+   https://gift-card-logger-xxxx.vercel.app/**
+   ```
+
+   This tells Supabase it's allowed to send signed-in users back to any
+   page of your app.
+4. Click **Save**.
 
 ---
 
