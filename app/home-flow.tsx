@@ -28,13 +28,18 @@ export default function HomeFlow({
   sheetUrl,
   sheetJustCreated,
   initialTrial,
+  initialPhase,
 }: {
   sheetUrl: string | null;
   sheetJustCreated: boolean;
   initialTrial: Trial;
+  initialPhase?: Phase;
 }) {
-  const [phase, setPhase] = useState<Phase>({ name: "home" });
+  const [phase, setPhase] = useState<Phase>(initialPhase ?? { name: "home" });
   const [trial, setTrial] = useState<Trial>(initialTrial);
+  // Which card's Value field was edited last — anchors the "apply to all
+  // cards" suggestion chip.
+  const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -73,6 +78,7 @@ export default function HomeFlow({
         });
         return;
       }
+      setLastValueEdit(null);
       setPhase({ name: "review", cards: data.cards });
     } catch {
       setPhase({
@@ -83,12 +89,24 @@ export default function HomeFlow({
   }
 
   function updateCard(index: number, field: keyof Card, value: string) {
+    if (field === "value") {
+      setLastValueEdit(index);
+    }
     setPhase((p) => {
       if (p.name !== "review") return p;
       const cards = p.cards.map((card, i) =>
         i === index ? { ...card, [field]: value } : card
       );
       return { ...p, cards };
+    });
+  }
+
+  function applyValueToAll(index: number) {
+    setLastValueEdit(null);
+    setPhase((p) => {
+      if (p.name !== "review") return p;
+      const value = p.cards[index].value;
+      return { ...p, cards: p.cards.map((card) => ({ ...card, value })) };
     });
   }
 
@@ -327,6 +345,42 @@ export default function HomeFlow({
               inputMode="decimal"
               error={phase.attempted && missingValue[i]}
             />
+            {lastValueEdit === i &&
+              card.value.trim() !== "" &&
+              phase.cards.some(
+                (other, j) => j !== i && other.value !== card.value
+              ) && (
+                <button
+                  onClick={() => applyValueToAll(i)}
+                  className="flex items-center gap-1.5 self-start rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition active:scale-[0.97] dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M8 2 v9 M4.5 7.5 L8 11 l3.5 -3.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M3 14 h10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Apply {card.value.trim()} to the other{" "}
+                  {phase.cards.length - 1 === 1
+                    ? "card"
+                    : `${phase.cards.length - 1} cards`}
+                </button>
+              )}
           </div>
         ))}
         <button
