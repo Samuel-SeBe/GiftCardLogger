@@ -66,7 +66,7 @@ export default async function HomePage() {
         <span className="text-sm font-bold">Gift Card Snapper</span>
         <BetaBadge />
       </header>
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+      <main className="flex flex-1 flex-col items-center gap-4 p-6 pt-[8vh]">
         <HomeFlow
           sheetUrl={sheetUrl}
           sheetJustCreated={sheetJustCreated}
