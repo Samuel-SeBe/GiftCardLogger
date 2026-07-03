@@ -1,0 +1,327 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Gift Card Snapper — promo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    display: flex; align-items: center; justify-content: center; gap: 56px;
+    position: relative;
+  }
+
+  /* ---------- phone ---------- */
+  .phone {
+    width: 300px; height: 620px; background: #0a0a0a; border-radius: 40px;
+    padding: 12px; box-shadow: 0 30px 60px rgba(0,0,0,.5);
+    position: relative; flex-shrink: 0;
+  }
+  .phone::before {
+    content: ""; position: absolute; top: 24px; left: 50%;
+    transform: translateX(-50%); width: 90px; height: 22px;
+    background: #0a0a0a; border-radius: 12px; z-index: 5;
+  }
+  .screen {
+    width: 100%; height: 100%; background: #fff; border-radius: 30px;
+    overflow: hidden; position: relative;
+  }
+  .app-screen {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 24px; text-align: center;
+  }
+  .app-screen.on { display: flex; }
+
+  .brand { font-size: 22px; font-weight: 800; color: #111; }
+  .tagline { font-size: 12px; color: #666; }
+  .btn-primary {
+    width: 100%; background: #2563eb; color: #fff; font-size: 17px;
+    font-weight: 700; padding: 18px; border-radius: 18px;
+    box-shadow: 0 6px 16px rgba(37,99,235,.35); position: relative;
+  }
+  .btn-secondary {
+    width: 100%; color: #333; font-size: 14px; font-weight: 500;
+    padding: 14px; border-radius: 18px; border: 1px solid #ddd;
+  }
+  .hint { font-size: 11.5px; color: #777; }
+
+  .tap {
+    position: absolute; width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(255,255,255,.45); border: 2px solid rgba(255,255,255,.8);
+    transform: scale(.3); opacity: 0; pointer-events: none; z-index: 10;
+  }
+  .tap.go { animation: tapAnim .6s ease-out forwards; }
+  @keyframes tapAnim {
+    0% { transform: scale(.3); opacity: 0; }
+    30% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  /* camera view */
+  #camera { background: #2d2a26; justify-content: space-between; padding: 0; }
+  .table-bg {
+    flex: 1; width: 100%; background:
+      radial-gradient(circle at 30% 20%, #4a4440 0%, #2d2a26 70%);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 30px 20px 16px;
+  }
+  .gc { width: 190px; height: 116px; border-radius: 10px; padding: 12px 14px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 8px 14px rgba(0,0,0,.45); text-align: left; }
+  .gc .name { font-weight: 800; font-size: 15px; letter-spacing: .5px; }
+  .gc .num { font-family: "Courier New", monospace; font-size: 10.5px; font-weight: 700; }
+  .gc .foot { display: flex; justify-content: space-between; font-size: 10px; }
+  .gc.amazon { background: #232f3e; color: #fff; transform: rotate(-3deg); }
+  .gc.amazon .val { color: #ff9900; font-weight: 800; }
+  .gc.bestbuy { background: #ffe000; color: #001e73; transform: rotate(2deg); }
+  .gc.homedepot { background: #f96302; color: #fff; transform: rotate(-1.5deg); }
+  .shutter-bar { width: 100%; padding: 14px; display: flex; justify-content: center; background: rgba(0,0,0,.55); }
+  .shutter { width: 54px; height: 54px; border-radius: 50%; background: #fff; border: 4px solid #bbb; position: relative; }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 20; border-radius: 30px; }
+  .flash.go { animation: flashAnim .45s ease-out forwards; }
+  @keyframes flashAnim { 0% {opacity:0;} 25% {opacity:.95;} 100% {opacity:0;} }
+
+  /* processing */
+  .spinner {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 5px solid #2563eb; border-top-color: transparent;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .proc-label { font-size: 16px; font-weight: 600; color: #222; }
+
+  /* review */
+  #review { justify-content: flex-start; padding-top: 46px; gap: 8px; }
+  .review-title { font-size: 16px; font-weight: 800; color: #111; }
+  .review-sub { font-size: 10.5px; color: #777; margin-bottom: 2px; }
+  .rcard {
+    width: 100%; border: 1px solid #e3e3e3; border-radius: 14px;
+    padding: 9px 12px; text-align: left; box-shadow: 0 2px 6px rgba(0,0,0,.05);
+    opacity: 0; transform: translateY(14px); transition: all .4s ease;
+    background: #fff;
+  }
+  .rcard.in { opacity: 1; transform: none; }
+  .rcard .v { font-weight: 700; font-size: 13px; color: #111; }
+  .rcard .row { display: flex; justify-content: space-between; margin-top: 3px; }
+  .rcard .lbl { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+  .rcard .fld { font-family: "Courier New", monospace; font-size: 11px; color: #222; font-weight: 700; }
+  .approve { margin-top: auto; }
+
+  /* success */
+  .check {
+    width: 62px; height: 62px; border-radius: 50%; background: #dcfce7;
+    color: #16a34a; font-size: 32px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    transform: scale(.4); opacity: 0; transition: all .45s cubic-bezier(.2,1.6,.4,1);
+  }
+  #success.on .check { transform: scale(1); opacity: 1; }
+  .success-title { font-size: 22px; font-weight: 800; color: #111; }
+  .success-sub { font-size: 13px; color: #555; }
+
+  /* ---------- sheet ---------- */
+  .browser {
+    width: 760px; background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,.5); flex-shrink: 0;
+  }
+  .browser-top { background: #e8eaed; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .tab {
+    background: #fff; border-radius: 8px 8px 0 0; margin-left: 14px;
+    padding: 6px 16px; font-size: 12px; color: #333; display: flex; gap: 8px; align-items: center;
+    transform: translateY(10px);
+  }
+  .sheet-head { padding: 12px 18px 8px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
+  .sheet-logo { width: 26px; height: 34px; background: #0f9d58; border-radius: 4px; position: relative; }
+  .sheet-logo::after { content: ""; position: absolute; inset: 9px 6px; background:
+    linear-gradient(#fff 0 2px, transparent 2px 5px, #fff 5px 7px, transparent 7px 10px, #fff 10px 12px, transparent 12px); }
+  .sheet-title { font-size: 15px; color: #202124; font-weight: 500; }
+  .sheet-sub { font-size: 11px; color: #80868b; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { border: 1px solid #e0e0e0; padding: 7px 10px; text-align: left; height: 18px; }
+  th { background: #f8f9fa; color: #444; font-weight: 600; width: 20%; }
+  .corner { background: #f8f9fa; width: 34px; }
+  .rowno { background: #f8f9fa; color: #80868b; text-align: center; font-size: 11px; }
+  td.filled { font-family: Arial, sans-serif; color: #202124; }
+  tr.newrow td:not(.rowno) { background: transparent; transition: background 1.2s ease; }
+  tr.newrow.flash td:not(.rowno) { background: #d9f5e3; transition: none; }
+  tr.newrow .cellv { opacity: 0; }
+  tr.newrow.show .cellv { opacity: 1; }
+
+  /* ---------- outro ---------- */
+  #outro {
+    position: absolute; inset: 0; background: linear-gradient(135deg, #0f172a, #1d4ed8);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; opacity: 0; pointer-events: none; transition: opacity .6s ease; z-index: 50;
+  }
+  #outro.on { opacity: 1; }
+  .outro-logo { font-size: 52px; }
+  .outro-name { font-size: 44px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+  .outro-tag { font-size: 20px; color: #bfdbfe; font-weight: 500; }
+  .outro-url { font-size: 17px; color: #93c5fd; margin-top: 10px; }
+
+  .caption {
+    position: absolute; bottom: 26px; left: 0; right: 0; text-align: center;
+    font-size: 19px; font-weight: 600; color: #e2e8f0; opacity: 0; transition: opacity .4s ease;
+  }
+  .caption.on { opacity: 1; }
+</style>
+</head>
+<body>
+
+  <div class="phone"><div class="screen">
+
+    <div class="app-screen on" id="home">
+      <div class="brand">Gift Card Snapper</div>
+      <p class="tagline">Snap your gift cards.<br>Get rows in Google Sheets.</p>
+      <div style="height:8px"></div>
+      <div class="btn-primary" id="takeBtn">Take Photo
+        <div class="tap" id="tap1" style="right:18px; top:8px;"></div>
+      </div>
+      <div class="btn-secondary">Choose Existing Photo</div>
+      <p class="hint">One photo can capture several cards at once.</p>
+    </div>
+
+    <div class="app-screen" id="camera">
+      <div class="table-bg">
+        <div class="gc amazon">
+          <div class="name">amazon</div>
+          <div class="num">CLAIM CODE<br>Q4X7-KPLMN9-8T2W</div>
+          <div class="foot"><span>Gift Card</span><span class="val">$50</span></div>
+        </div>
+        <div class="gc bestbuy">
+          <div class="name">BEST BUY</div>
+          <div class="num">6050 1234 5678 9012</div>
+          <div class="foot"><span>PIN 4471</span><span><b>$25</b></span></div>
+        </div>
+        <div class="gc homedepot">
+          <div class="name">THE HOME DEPOT</div>
+          <div class="num">9876 5432 1098 7654</div>
+          <div class="foot"><span>PIN 9871</span><span><b>$100</b></span></div>
+        </div>
+      </div>
+      <div class="shutter-bar"><div class="shutter"><div class="tap go2" id="tap2" style="left:4px; top:4px;"></div></div></div>
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="app-screen" id="processing">
+      <div class="spinner"></div>
+      <p class="proc-label">Processing Image...</p>
+      <p class="hint">Reading every card in your photo</p>
+    </div>
+
+    <div class="app-screen" id="review">
+      <div class="review-title">3 gift cards found</div>
+      <div class="review-sub">Check each field, then save.</div>
+      <div class="rcard" id="rc1">
+        <div class="v">Amazon</div>
+        <div class="row"><span><span class="lbl">Card #</span><br><span class="fld">Q4X7-KPLMN9-8T2W</span></span>
+        <span style="text-align:right"><span class="lbl">Value</span><br><span class="fld">50.00</span></span></div>
+      </div>
+      <div class="rcard" id="rc2">
+        <div class="v">Best Buy</div>
+        <div class="row"><span><span class="lbl">Card #</span><br><span class="fld">6050 1234 5678 9012</span></span>
+        <span style="text-align:right"><span class="lbl">Value</span><br><span class="fld">25.00</span></span></div>
+      </div>
+      <div class="rcard" id="rc3">
+        <div class="v">Home Depot</div>
+        <div class="row"><span><span class="lbl">Card #</span><br><span class="fld">9876 5432 1098 7654</span></span>
+        <span style="text-align:right"><span class="lbl">Value</span><br><span class="fld">100.00</span></span></div>
+      </div>
+      <div class="btn-primary approve" id="approveBtn" style="font-size:15px; padding:15px;">Approve &amp; Save
+        <div class="tap" id="tap3" style="right:16px; top:5px;"></div>
+      </div>
+    </div>
+
+    <div class="app-screen" id="saving">
+      <div class="spinner"></div>
+      <p class="proc-label">Saving...</p>
+    </div>
+
+    <div class="app-screen" id="success">
+      <div class="check">✓</div>
+      <div class="success-title">Success</div>
+      <div class="success-sub">3 of 3 cards saved.</div>
+      <div style="height:6px"></div>
+      <div class="btn-primary" style="font-size:15px; padding:15px;">Take Next Photo</div>
+    </div>
+
+  </div></div>
+
+  <div class="browser">
+    <div class="browser-top">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#febc2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+      <div class="tab">📊 Gift Card Inventory — Google Sheets</div>
+    </div>
+    <div class="sheet-head">
+      <div class="sheet-logo"></div>
+      <div>
+        <div class="sheet-title">Gift Card Inventory</div>
+        <div class="sheet-sub">Inventory ▾</div>
+      </div>
+    </div>
+    <table>
+      <tr><th class="corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+      <tr><td class="rowno">1</td><td class="filled"><b>Date</b></td><td class="filled"><b>Vendor</b></td><td class="filled"><b>Card Number</b></td><td class="filled"><b>PIN</b></td><td class="filled"><b>Value</b></td></tr>
+      <tr class="newrow" id="nr1"><td class="rowno">2</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Amazon</span></td><td><span class="cellv">Q4X7-KPLMN9-8T2W</span></td><td><span class="cellv"></span></td><td><span class="cellv">50.00</span></td></tr>
+      <tr class="newrow" id="nr2"><td class="rowno">3</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Best Buy</span></td><td><span class="cellv">6050 1234 5678 9012</span></td><td><span class="cellv">4471</span></td><td><span class="cellv">25.00</span></td></tr>
+      <tr class="newrow" id="nr3"><td class="rowno">4</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Home Depot</span></td><td><span class="cellv">9876 5432 1098 7654</span></td><td><span class="cellv">9871</span></td><td><span class="cellv">100.00</span></td></tr>
+      <tr><td class="rowno">5</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="rowno">6</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="rowno">7</td><td></td><td></td><td></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <p class="caption" id="caption"></p>
+
+  <div id="outro">
+    <div class="outro-logo">📸</div>
+    <div class="outro-name">Gift Card Snapper</div>
+    <div class="outro-tag">Snap. Confirm. Done.</div>
+    <div class="outro-url">giftcardsnapper.com</div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const screens = ["home", "camera", "processing", "review", "saving", "success"];
+  function show(id) {
+    screens.forEach((s) => $(s).classList.toggle("on", s === id));
+  }
+  function caption(text) {
+    const c = $("caption");
+    if (!text) { c.classList.remove("on"); return; }
+    c.textContent = text;
+    c.classList.add("on");
+  }
+  const steps = [
+    [300,  () => caption("One photo. Three gift cards.")],
+    [900,  () => $("tap1").classList.add("go")],
+    [1500, () => show("camera")],
+    [2600, () => $("tap2").classList.add("go")],
+    [3000, () => $("flash").classList.add("go")],
+    [3350, () => { show("processing"); caption("AI reads every card — automatically."); }],
+    [4900, () => { show("review"); caption("Confirm the details…"); }],
+    [5100, () => $("rc1").classList.add("in")],
+    [5350, () => $("rc2").classList.add("in")],
+    [5600, () => $("rc3").classList.add("in")],
+    [6900, () => $("tap3").classList.add("go")],
+    [7400, () => show("saving")],
+    [8100, () => { show("success"); caption("…and they're in your Google Sheet."); }],
+    [8400, () => landRow("nr1")],
+    [8900, () => landRow("nr2")],
+    [9400, () => landRow("nr3")],
+    [11200, () => $("outro").classList.add("on")],
+  ];
+  function landRow(id) {
+    const r = $(id);
+    r.classList.add("show", "flash");
+    setTimeout(() => r.classList.remove("flash"), 60);
+  }
+  steps.forEach(([t, fn]) => setTimeout(fn, t));
+</script>
+</body>
+</html>
