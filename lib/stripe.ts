@@ -1,3 +1,4 @@
+import "server-only";
 import Stripe from "stripe";
 
 // Lazy so a missing key breaks only billing endpoints, never the build.

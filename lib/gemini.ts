@@ -1,3 +1,5 @@
+import "server-only";
+
 // Reads gift cards out of a photo using Google Gemini.
 //
 // This is the only file that knows which AI provider we use — swapping

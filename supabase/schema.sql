@@ -14,11 +14,8 @@ create table public.users (
   updated_at timestamptz not null default now()
 );
 
--- Row-level security: browsers may only READ their own row.
--- All writes happen server-side with the service role key, so nobody can
--- reset their own trial count or subscription status from a browser.
+-- Row-level security with NO policies: browsers can neither read nor
+-- write this table at all. Every access goes through the app's server
+-- code (service role key), so nobody can reset their own trial count,
+-- change their subscription status, or read stored tokens from a browser.
 alter table public.users enable row level security;
-
-create policy "Users can view own row"
-  on public.users for select
-  using (auth.uid() = id);

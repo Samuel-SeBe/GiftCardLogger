@@ -1,3 +1,5 @@
+import "server-only";
+
 // Server-side helpers for talking to Google APIs on the user's behalf.
 
 // Thrown when the stored refresh token is expired or revoked and the user
