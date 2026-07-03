@@ -79,6 +79,16 @@ function LoginContent() {
         Your card details are never stored by this app — they go straight to
         a Google Sheet in your own Drive.
       </p>
+
+      <p className="text-xs opacity-40">
+        <a href="/privacy" className="underline">
+          Privacy
+        </a>
+        {" · "}
+        <a href="/terms" className="underline">
+          Terms
+        </a>
+      </p>
     </main>
   );
 }

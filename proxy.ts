@@ -44,7 +44,11 @@ export default async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPublic = path === "/login" || path.startsWith("/auth");
+  const isPublic =
+    path === "/login" ||
+    path === "/privacy" ||
+    path === "/terms" ||
+    path.startsWith("/auth");
 
   // API routes speak JSON and enforce auth themselves — a redirect to the
   // login page would only confuse their callers.
