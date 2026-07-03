@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gift Card Logger",
-  description: "Photograph gift cards. Get rows in Google Sheets.",
+  title: "Gift Card Snapper",
+  description: "Snap your gift cards. Get rows in Google Sheets.",
 };
 
 export const viewport: Viewport = {

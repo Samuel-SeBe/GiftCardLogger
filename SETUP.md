@@ -396,7 +396,9 @@ vercel.app address (which keeps working as a backup).
 
 - [ ] **Fix the name shown on the Google sign-in page.** Two parts:
   - The app name itself: Google Cloud console → OAuth consent screen /
-    Branding → "App name" — free to edit anytime.
+    Branding → "App name" — change it to `Gift Card Snapper`. While
+    you're there, consider renaming the Stripe product too (Product
+    catalog → edit) so receipts say Gift Card Snapper.
   - The "to continue to abc123.supabase.co" line: Google shows the domain
     that handles the sign-in, which is currently the Supabase project
     address. Making it say your own domain requires a custom domain

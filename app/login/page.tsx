@@ -30,9 +30,11 @@ function LoginContent() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Gift Card Logger</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Gift Card Snapper
+        </h1>
         <p className="mt-2 text-sm opacity-70">
-          Photograph gift cards. Get rows in Google Sheets.
+          Snap your gift cards. Get rows in Google Sheets.
         </p>
       </div>
 

@@ -1,7 +1,9 @@
-# Gift Card Logger
+# Gift Card Snapper
 
 Mobile-first app for professional gift card resellers: photograph gift
 cards, verify the extracted details, and save them as rows in Google Sheets.
+
+Live at <https://giftcardsnapper.com> (repository name predates the brand).
 
 - **Product spec:** see [SPEC.md](./SPEC.md)
 - **Account & environment setup (start here):** see [SETUP.md](./SETUP.md)
