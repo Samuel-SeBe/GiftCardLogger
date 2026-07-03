@@ -457,6 +457,10 @@ export default function HomeFlow({
       >
         Choose Existing Photo
       </button>
+      <p className="text-center text-xs opacity-50">
+        Photos and card details are never stored — they go only to your
+        sheet.
+      </p>
       {trial && (
         <p className="text-center text-xs opacity-60">
           Free trial: {trial.used} of {trial.limit} uploads used
