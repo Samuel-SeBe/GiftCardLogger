@@ -345,6 +345,53 @@ No real money moves in test mode. Before launch we swap in live keys
 
 ---
 
+# Step 6a — Point giftcardsnapper.com at the app
+
+All dashboard configuration — no code changes.
+
+## 1. Add the domain in Vercel
+
+1. Vercel → your project → **Settings** → **Domains**.
+2. Add `giftcardsnapper.com`. When asked, also accept `www.giftcardsnapper.com`
+   (choose the non-www as primary; Vercel redirects the www one).
+3. Vercel now shows the exact DNS records to create — typically an **A**
+   record for the bare domain and a **CNAME** for `www`.
+
+## 2. Create those DNS records at your registrar
+
+Wherever you bought giftcardsnapper.com (GoDaddy, Namecheap, etc.), open
+its DNS settings and add exactly the records Vercel showed. Then wait —
+usually minutes, occasionally a few hours. Vercel's Domains page shows a
+green check when it's live, and HTTPS is automatic.
+
+## 3. Tell Supabase about the new address
+
+Supabase → **Authentication** → **URL Configuration**:
+
+- **Site URL**: `https://giftcardsnapper.com`
+- **Redirect URLs** — add both (keep the old vercel.app entry too):
+  ```
+  https://giftcardsnapper.com/**
+  https://www.giftcardsnapper.com/**
+  ```
+
+## 4. Optional tidy-ups
+
+- Stripe → Developers → Webhooks: the existing endpoint on
+  gift-card-logger.vercel.app keeps working, but you can edit its URL to
+  `https://giftcardsnapper.com/api/stripe/webhook` for neatness.
+- Google Cloud → OAuth consent screen / Branding: set the app homepage to
+  `https://giftcardsnapper.com` and add `giftcardsnapper.com` under
+  authorized domains if prompted.
+
+## 5. Test
+
+Open `https://giftcardsnapper.com` in a private window, sign in with
+Google, upload a photo. Everything should behave identically to the
+vercel.app address (which keeps working as a backup).
+
+---
+
 # Step 6 — Launch checklist (not yet — collected as we go)
 
 - [ ] **Fix the name shown on the Google sign-in page.** Two parts:
@@ -357,8 +404,7 @@ No real money moves in test mode. Before launch we swap in live keys
     polish item to decide on at launch.
 - [ ] Switch Stripe from test mode to live mode (live keys into Vercel).
 - [ ] Turn on billing for the Gemini API key.
-- [ ] Optional: custom domain for the app itself instead of
-      gift-card-logger.vercel.app.
+- [x] Custom domain: giftcardsnapper.com — see Step 6a above.
 - [ ] Remove the temporary "Sign out" link on the home screen (or keep it).
 
 ---
