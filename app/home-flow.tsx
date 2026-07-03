@@ -157,6 +157,9 @@ export default function HomeFlow() {
         <p className="text-lg font-medium">
           {phase.name === "processing" ? "Processing Image..." : "Saving..."}
         </p>
+        {phase.name === "processing" && (
+          <p className="text-sm opacity-60">Reading every card in your photo</p>
+        )}
       </div>
     );
   }
@@ -174,6 +177,9 @@ export default function HomeFlow() {
         <h1 className="text-2xl font-bold">Success</h1>
         <p className="opacity-70">
           {phase.count} of {phase.count} cards saved.
+        </p>
+        <p className="text-sm opacity-60">
+          Tip: several cards fit in one photo.
         </p>
         <button
           onClick={() => cameraInput.current?.click()}
@@ -258,7 +264,7 @@ export default function HomeFlow() {
             : `${phase.cards.length} gift cards found`}
         </h1>
         <p className="text-sm opacity-70">
-          Check every field against the physical card, then save.
+          Check each field against the card, then save.
         </p>
         {phase.attempted && missingValue.some(Boolean) && (
           <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
@@ -324,6 +330,9 @@ export default function HomeFlow() {
           {phase.message}
         </p>
       )}
+      <p className="text-center text-sm opacity-70">
+        Lay out your gift cards — one photo can capture several at once.
+      </p>
       <button
         onClick={() => cameraInput.current?.click()}
         className="w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
