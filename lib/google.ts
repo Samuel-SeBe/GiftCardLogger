@@ -32,6 +32,15 @@ export async function getGoogleAccessToken(
     }
     throw new Error(`Google token refresh failed: ${data.error ?? res.status}`);
   }
+
+  // Google reports which permissions the user actually granted. If they
+  // signed in but left the Drive checkbox unticked on the consent screen,
+  // every spreadsheet call would fail — send them back through consent
+  // with guidance instead.
+  if (typeof data.scope === "string" && !data.scope.includes("drive.file")) {
+    throw new GoogleReauthRequiredError();
+  }
+
   return data.access_token;
 }
 
