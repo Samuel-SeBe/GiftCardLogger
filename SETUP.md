@@ -345,6 +345,24 @@ No real money moves in test mode. Before launch we swap in live keys
 
 ---
 
+# Step 6 — Launch checklist (not yet — collected as we go)
+
+- [ ] **Fix the name shown on the Google sign-in page.** Two parts:
+  - The app name itself: Google Cloud console → OAuth consent screen /
+    Branding → "App name" — free to edit anytime.
+  - The "to continue to abc123.supabase.co" line: Google shows the domain
+    that handles the sign-in, which is currently the Supabase project
+    address. Making it say your own domain requires a custom domain
+    (bought at launch) attached to Supabase (paid add-on, ~$10/mo) — a
+    polish item to decide on at launch.
+- [ ] Switch Stripe from test mode to live mode (live keys into Vercel).
+- [ ] Turn on billing for the Gemini API key.
+- [ ] Optional: custom domain for the app itself instead of
+      gift-card-logger.vercel.app.
+- [ ] Remove the temporary "Sign out" link on the home screen (or keep it).
+
+---
+
 ## Appendix — Running on your own computer (optional, not required)
 
 Developers sometimes run the app locally for faster feedback. You don't
