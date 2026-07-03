@@ -7,6 +7,7 @@ import {
   GOOGLE_OAUTH_QUERY_PARAMS,
   GOOGLE_OAUTH_SCOPES,
 } from "@/lib/google-oauth";
+import { BetaBadge, Logo } from "@/components/logo";
 
 function LoginContent() {
   const [loading, setLoading] = useState(false);
@@ -29,10 +30,14 @@ function LoginContent() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Gift Card Snapper
-        </h1>
+      <div className="flex flex-col items-center text-center">
+        <Logo size={76} />
+        <div className="mt-4 flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Gift Card Snapper
+          </h1>
+          <BetaBadge />
+        </div>
         <p className="mt-2 text-sm opacity-70">
           Snap your gift cards. Get rows in Google Sheets.
         </p>
