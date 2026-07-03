@@ -63,7 +63,14 @@ export async function spreadsheetExists(
 
 export const SHEET_NAME = "Inventory";
 const SPREADSHEET_TITLE = "Gift Card Inventory";
-const HEADER_ROW = ["Date", "Vendor", "Card Number", "PIN", "Value"];
+const HEADER_ROW = [
+  "Date",
+  "Vendor",
+  "Card Number",
+  "PIN",
+  "Value",
+  "Expiration",
+];
 
 // Creates the user's inventory spreadsheet with its header row and returns
 // the new spreadsheet's ID.
@@ -108,6 +115,43 @@ export async function createInventorySpreadsheet(
   return data.spreadsheetId;
 }
 
+// Spreadsheets created before the Expiration column existed lack its
+// header; add it to the first free header cell, once, without touching
+// anything else. Best-effort: failures are logged by callers, not fatal.
+export async function ensureExpirationHeader(
+  accessToken: string,
+  spreadsheetId: string
+): Promise<void> {
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const range = encodeURIComponent(`${SHEET_NAME}!1:1`);
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
+    { headers }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to read header row: ${res.status}`);
+  }
+  const data = await res.json();
+  const row: string[] = data.values?.[0] ?? [];
+  if (row.includes("Expiration")) {
+    return;
+  }
+
+  const columnLetter = String.fromCharCode(65 + row.length); // next free cell
+  const cell = encodeURIComponent(`${SHEET_NAME}!${columnLetter}1`);
+  const update = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${cell}?valueInputOption=RAW`,
+    {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ values: [["Expiration"]] }),
+    }
+  );
+  if (!update.ok) {
+    throw new Error(`Failed to add Expiration header: ${update.status}`);
+  }
+}
+
 // Appends one row to the bottom of the Inventory worksheet.
 // valueInputOption=RAW stores values exactly as sent, so card numbers keep
 // their leading zeros and dashes instead of being mangled into numbers.
@@ -116,7 +160,7 @@ export async function appendRow(
   spreadsheetId: string,
   row: string[]
 ): Promise<void> {
-  const range = encodeURIComponent(`${SHEET_NAME}!A:E`);
+  const range = encodeURIComponent(`${SHEET_NAME}!A:F`);
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     {

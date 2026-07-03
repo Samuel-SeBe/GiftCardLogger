@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createInventorySpreadsheet,
+  ensureExpirationHeader,
   getGoogleAccessToken,
   GoogleReauthRequiredError,
   spreadsheetExists,
@@ -54,6 +55,12 @@ export async function ensureSpreadsheet(
     user.spreadsheet_id &&
     (await spreadsheetExists(accessToken, user.spreadsheet_id))
   ) {
+    // Older sheets predate the Expiration column; patch the header in.
+    try {
+      await ensureExpirationHeader(accessToken, user.spreadsheet_id);
+    } catch (e) {
+      console.error("Header check failed (continuing):", e);
+    }
     return {
       status: "ready",
       spreadsheetId: user.spreadsheet_id,

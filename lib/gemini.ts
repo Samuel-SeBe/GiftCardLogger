@@ -10,17 +10,19 @@ export type ExtractedCard = {
   card_number: string;
   pin: string;
   value: string;
+  expiration: string;
 };
 
 const MODEL = "gemini-2.5-flash";
 
-const PROMPT = `This photo contains one or more retail gift cards. Extract every visible gift card.
+const PROMPT = `This photo contains one or more gift cards — store gift cards (e.g. Amazon, Best Buy, Home Depot) and/or network-branded prepaid gift cards (Visa, Mastercard, American Express). Extract every visible card.
 
 For each card return:
-- vendor: the brand name shown on the card (e.g. "Amazon", "Best Buy", "Home Depot"). Unknown brands are fine — use whatever the card shows.
+- vendor: the brand name shown on the card (e.g. "Amazon", "Best Buy", "Home Depot", "Vanilla Visa", "Mastercard"). Unknown brands are fine — use whatever the card shows.
 - card_number: the card's main number, with spaces or dashes exactly as printed. For Amazon cards use the claim code as the card number.
-- pin: the PIN or security code if one is visible. Amazon cards have no PIN — use an empty string. If a PIN exists but is hidden behind scratch-off material, use an empty string.
+- pin: the PIN, CVV, or security code if one is visible (for American Express cards this is the 4-digit code on the front). Amazon cards have no PIN — use an empty string. If the code is hidden behind scratch-off material or on the unseen side of the card, use an empty string.
 - value: the card's dollar amount as a plain number string without a currency symbol (e.g. "25" or "26.50"). If no amount is shown, use an empty string.
+- expiration: the expiration date exactly as printed (e.g. "12/28"). Most store gift cards have none — use an empty string.
 
 Only include cards that are actually visible in the photo. If there are no gift cards, return an empty array.`;
 
@@ -33,8 +35,9 @@ const RESPONSE_SCHEMA = {
       card_number: { type: "STRING" },
       pin: { type: "STRING" },
       value: { type: "STRING" },
+      expiration: { type: "STRING" },
     },
-    required: ["vendor", "card_number", "pin", "value"],
+    required: ["vendor", "card_number", "pin", "value", "expiration"],
   },
 };
 
@@ -93,6 +96,7 @@ export async function extractCardsFromImage(
     card_number: asTrimmedString(card?.card_number),
     pin: asTrimmedString(card?.pin),
     value: asTrimmedString(card?.value),
+    expiration: asTrimmedString(card?.expiration),
   }));
 }
 

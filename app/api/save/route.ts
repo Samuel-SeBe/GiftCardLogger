@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     card_number: asField(card?.card_number),
     pin: asField(card?.pin),
     value: asField(card?.value),
+    expiration: asField(card?.expiration),
   }));
 
   let provisioned;
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
         card.card_number,
         card.pin,
         card.value,
+        card.expiration,
       ]);
       results.push({ ok: true });
     } catch (e) {

@@ -9,6 +9,7 @@ type Card = {
   card_number: string;
   pin: string;
   value: string;
+  expiration: string;
 };
 
 type Phase =
@@ -288,6 +289,12 @@ export default function HomeFlow({
             <p>
               <span className="opacity-60">Value:</span> {card.value}
             </p>
+            {card.expiration && (
+              <p>
+                <span className="opacity-60">Expiration:</span>{" "}
+                {card.expiration}
+              </p>
+            )}
           </div>
         ))}
         <button
@@ -381,6 +388,11 @@ export default function HomeFlow({
                     : `${phase.cards.length - 1} cards`}
                 </button>
               )}
+            <Field
+              label="Expiration (if any)"
+              value={card.expiration}
+              onChange={(v) => updateCard(i, "expiration", v)}
+            />
           </div>
         ))}
         <button
