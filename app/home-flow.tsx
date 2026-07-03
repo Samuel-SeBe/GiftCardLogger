@@ -30,11 +30,13 @@ export default function HomeFlow({
   sheetUrl,
   sheetJustCreated,
   initialTrial,
+  subscribed = false,
   initialPhase,
 }: {
   sheetUrl: string | null;
   sheetJustCreated: boolean;
   initialTrial: Trial;
+  subscribed?: boolean;
   initialPhase?: Phase;
 }) {
   const [phase, setPhase] = useState<Phase>(initialPhase ?? { name: "home" });
@@ -143,6 +145,20 @@ export default function HomeFlow({
       }
     } catch {
       setPhase({ name: "savefail", cards, failed: cards.map(() => true) });
+    }
+  }
+
+  async function openBillingPortal() {
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      alert(data?.error ?? "Could not open billing settings.");
+    } catch {
+      alert("Could not open billing settings.");
     }
   }
 
@@ -473,6 +489,14 @@ export default function HomeFlow({
       >
         Refer a friend — earn free months
       </Link>
+      {subscribed && (
+        <button
+          onClick={openBillingPortal}
+          className="text-center text-xs opacity-50 underline"
+        >
+          Manage subscription
+        </button>
+      )}
 
       {/* Temporary while building: lets us test with multiple accounts. */}
       <button

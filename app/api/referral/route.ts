@@ -31,8 +31,10 @@ export async function GET(request: Request) {
       throw new Error(`Failed to load referrals: ${error.message}`);
     }
 
+    // Initials only — the referrer knows who they invited, but full names
+    // don't need to leave the server.
     const referrals = (referred ?? []).map((r) => ({
-      name: r.display_name || r.email,
+      name: initialsOf(r.display_name || r.email || "?"),
       joined: r.created_at,
       subscribed:
         r.subscription_status === "active" ||
@@ -55,4 +57,17 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+}
+
+// "Jane Smith" -> "J.S."  |  "jane.smith@x.com" -> "J.S."  |  "Jane" -> "J."
+function initialsOf(nameOrEmail: string): string {
+  const base = nameOrEmail.includes("@")
+    ? nameOrEmail.split("@")[0].replace(/[._-]+/g, " ")
+    : nameOrEmail;
+  const parts = base.trim().split(/\s+/).slice(0, 2);
+  const letters = parts
+    .map((p) => p[0]?.toUpperCase())
+    .filter(Boolean)
+    .join(".");
+  return letters ? `${letters}.` : "?";
 }

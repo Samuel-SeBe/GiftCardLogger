@@ -361,6 +361,19 @@ credit when a referred friend's first payment succeeds.
 
 ---
 
+# Manage subscription — one-time Stripe setting
+
+Subscribers get a "Manage subscription" link (home screen) that opens
+Stripe's hosted billing page where they can cancel or change their card.
+Stripe needs the page activated once:
+
+1. Stripe dashboard → **Settings** → **Billing** → **Customer portal**.
+2. Review the defaults (they're fine — cancellation is on) and click
+   **Save changes** / **Activate**.
+3. Repeat in Live mode after the launch switch.
+
+---
+
 # Step 6a — Point giftcardsnapper.com at the app
 
 All dashboard configuration — no code changes.

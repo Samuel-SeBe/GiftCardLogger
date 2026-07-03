@@ -58,6 +58,7 @@ export default async function HomePage() {
       limit: TRIAL_UPLOAD_LIMIT,
     };
   }
+  const subscribed = row?.subscription_status === "active";
 
   return (
     <>
@@ -71,6 +72,7 @@ export default async function HomePage() {
           sheetUrl={sheetUrl}
           sheetJustCreated={sheetJustCreated}
           initialTrial={trial}
+          subscribed={subscribed}
         />
       </main>
     </>
