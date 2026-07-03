@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { extractCardsFromImage } from "@/lib/gemini";
-import { canUpload } from "@/lib/access";
+import { canUpload, TRIAL_UPLOAD_LIMIT } from "@/lib/access";
 
 // Accepts one photo, runs OCR, and returns the extracted gift cards.
 // The image lives only in memory for the duration of this request — it is
@@ -63,5 +63,16 @@ export async function POST(request: Request) {
     })
     .eq("id", user.id);
 
-  return NextResponse.json({ cards });
+  // Tell trial users where they stand; null for subscribers/free passes.
+  const onTrial =
+    row.subscription_status !== "active" &&
+    row.subscription_status !== "complimentary";
+  const trial = onTrial
+    ? {
+        used: Math.min(row.trial_uploads_used + 1, TRIAL_UPLOAD_LIMIT),
+        limit: TRIAL_UPLOAD_LIMIT,
+      }
+    : null;
+
+  return NextResponse.json({ cards, trial });
 }

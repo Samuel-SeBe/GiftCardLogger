@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
+import { TRIAL_UPLOAD_LIMIT } from "@/lib/access";
 import HomeFlow from "./home-flow";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
@@ -36,9 +38,33 @@ export default async function HomePage() {
     redirect("/reconnect");
   }
 
+  // Trial users see how many free uploads they've used; subscribers and
+  // free-pass users see nothing.
+  let trial: { used: number; limit: number } | null = null;
+  const admin = createAdminClient();
+  const { data: row } = await admin
+    .from("users")
+    .select("trial_uploads_used, subscription_status")
+    .eq("id", user.id)
+    .single();
+  if (
+    row &&
+    row.subscription_status !== "active" &&
+    row.subscription_status !== "complimentary"
+  ) {
+    trial = {
+      used: Math.min(row.trial_uploads_used, TRIAL_UPLOAD_LIMIT),
+      limit: TRIAL_UPLOAD_LIMIT,
+    };
+  }
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-      <HomeFlow sheetUrl={sheetUrl} sheetJustCreated={sheetJustCreated} />
+      <HomeFlow
+        sheetUrl={sheetUrl}
+        sheetJustCreated={sheetJustCreated}
+        initialTrial={trial}
+      />
     </main>
   );
 }

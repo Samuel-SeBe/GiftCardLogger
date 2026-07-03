@@ -22,14 +22,19 @@ type Phase =
 
 // The entire primary workflow lives here:
 // Take Photo -> Processing -> Review -> Save -> Success (repeat)
+type Trial = { used: number; limit: number } | null;
+
 export default function HomeFlow({
   sheetUrl,
   sheetJustCreated,
+  initialTrial,
 }: {
   sheetUrl: string | null;
   sheetJustCreated: boolean;
+  initialTrial: Trial;
 }) {
   const [phase, setPhase] = useState<Phase>({ name: "home" });
+  const [trial, setTrial] = useState<Trial>(initialTrial);
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -56,6 +61,9 @@ export default function HomeFlow({
           message: data?.error ?? "Something went wrong. Please try again.",
         });
         return;
+      }
+      if (data?.trial !== undefined) {
+        setTrial(data.trial);
       }
       if (!data?.cards?.length) {
         setPhase({
@@ -209,6 +217,11 @@ export default function HomeFlow({
         >
           Choose Existing Photo
         </button>
+        {trial && (
+          <p className="text-xs opacity-60">
+            Free trial: {trial.used} of {trial.limit} uploads used
+          </p>
+        )}
       </div>
     );
   }
@@ -378,6 +391,11 @@ export default function HomeFlow({
       >
         Choose Existing Photo
       </button>
+      {trial && (
+        <p className="text-center text-xs opacity-60">
+          Free trial: {trial.used} of {trial.limit} uploads used
+        </p>
+      )}
 
       {/* Temporary while building: lets us test with multiple accounts. */}
       <button
