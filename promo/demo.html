@@ -111,7 +111,12 @@
   .rcard.in { opacity: 1; transform: none; }
   .rcard .v { font-weight: 700; font-size: 13.5px; color: #111; }
   .rcard .n { font-family: "Courier New", monospace; font-size: 10px; color: #555; font-weight: 700; }
-  .rcard .val { font-family: "Courier New", monospace; font-size: 13px; color: #111; font-weight: 800; }
+  .rcard .val {
+    font-family: "Courier New", monospace; font-size: 13px; color: #111;
+    font-weight: 800; border: 1.5px solid #94a3b8; border-radius: 8px;
+    background: #f8fafc; padding: 5px 10px; min-width: 68px; text-align: right;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.06);
+  }
   .approve { margin-top: auto; }
 
   /* success */
@@ -161,13 +166,20 @@
     gap: 14px; opacity: 0; pointer-events: none; transition: opacity .7s ease; z-index: 50;
   }
   #outro.on { opacity: 1; }
+  #intro {
+    position: absolute; inset: 0; background: linear-gradient(135deg, #0f172a, #1d4ed8);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; opacity: 1; pointer-events: none; transition: opacity .7s ease; z-index: 55;
+  }
+  #intro.off { opacity: 0; }
+  .intro-hint { font-size: 17px; color: #93c5fd; margin-top: 12px; }
   .outro-logo { font-size: 56px; }
   .outro-name { font-size: 48px; font-weight: 900; color: #fff; letter-spacing: -1px; }
   .outro-tag { font-size: 23px; color: #bfdbfe; font-weight: 500; }
   .outro-url { font-size: 19px; color: #93c5fd; margin-top: 10px; }
 
   .caption {
-    position: absolute; bottom: 20px; left: 0; right: 0; text-align: center;
+    position: absolute; top: 44px; left: 490px; width: 700px; text-align: center;
     font-size: 27px; font-weight: 700; color: #f1f5f9; opacity: 0;
     transition: opacity .5s ease; text-shadow: 0 2px 8px rgba(0,0,0,.5);
   }
@@ -292,10 +304,45 @@
 
   <p class="caption" id="caption"></p>
 
-  <div id="outro">
-    <div class="outro-logo">📸</div>
+  <div id="intro">
+    <div class="outro-logo"><svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
+      </linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#lg1)"/>
+      <g transform="rotate(-6 28 30)">
+        <rect x="9" y="17" width="37" height="25" rx="4" fill="#ffffff"/>
+        <rect x="9" y="23" width="37" height="5" fill="#93c5fd"/>
+        <rect x="13" y="33" width="14" height="3" rx="1.5" fill="#cbd5e1"/>
+      </g>
+      <circle cx="44" cy="43" r="11.5" fill="#1e3a8a"/>
+      <circle cx="44" cy="43" r="7.5" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+      <circle cx="47" cy="40" r="2" fill="#ffffff" opacity="0.9"/>
+      <path d="M51 9 l2.3 4.6 4.6 2.3 -4.6 2.3 -2.3 4.6 -2.3 -4.6 -4.6 -2.3 4.6 -2.3 z" fill="#fde047"/>
+    </svg></div>
     <div class="outro-name">Gift Card Snapper</div>
-    <div class="outro-tag">Snap up to 6 cards at once.</div>
+    <div class="outro-tag">Snap your gift cards. Get rows in Google Sheets.</div>
+    <div class="intro-hint">Here’s how it works ↓</div>
+  </div>
+
+  <div id="outro">
+    <div class="outro-logo"><svg width="88" height="88" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
+      </linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#lg2)"/>
+      <g transform="rotate(-6 28 30)">
+        <rect x="9" y="17" width="37" height="25" rx="4" fill="#ffffff"/>
+        <rect x="9" y="23" width="37" height="5" fill="#93c5fd"/>
+        <rect x="13" y="33" width="14" height="3" rx="1.5" fill="#cbd5e1"/>
+      </g>
+      <circle cx="44" cy="43" r="11.5" fill="#1e3a8a"/>
+      <circle cx="44" cy="43" r="7.5" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+      <circle cx="47" cy="40" r="2" fill="#ffffff" opacity="0.9"/>
+      <path d="M51 9 l2.3 4.6 4.6 2.3 -4.6 2.3 -2.3 4.6 -2.3 -4.6 -4.6 -2.3 4.6 -2.3 z" fill="#fde047"/>
+    </svg></div>
+    <div class="outro-name">Gift Card Snapper</div>
+    <div class="outro-tag">Snaps up to 6 cards at once and loads them<br>directly into a Google Sheet.</div>
     <div class="outro-url">giftcardsnapper.com</div>
   </div>
 
@@ -317,29 +364,30 @@
     setTimeout(() => r.classList.remove("flash"), 80);
   }
   const steps = [
-    [400,   () => caption("Log gift cards straight to Google Sheets.")],
-    [2400,  () => $("tap1").classList.add("go")],
-    [3100,  () => { show("camera"); caption('Scan <span class="hi">1 — or up to 6</span> cards in one photo.'); }],
-    [6600,  () => $("tap2").classList.add("go")],
-    [7100,  () => $("flash").classList.add("go")],
-    [7500,  () => { show("processing"); caption("AI reads every card — automatically."); }],
-    [10200, () => { show("review"); caption("All 6 cards on one screen. Confirm and save."); }],
-    [10400, () => $("rc1").classList.add("in")],
-    [10700, () => $("rc2").classList.add("in")],
-    [11000, () => $("rc3").classList.add("in")],
-    [11300, () => $("rc4").classList.add("in")],
-    [11600, () => $("rc5").classList.add("in")],
-    [11900, () => $("rc6").classList.add("in")],
-    [14400, () => $("tap3").classList.add("go")],
-    [15000, () => show("saving")],
-    [15900, () => { show("success"); caption("6 rows land in your Google Sheet."); }],
-    [16200, () => landRow("nr1")],
-    [16800, () => landRow("nr2")],
-    [17400, () => landRow("nr3")],
-    [18000, () => landRow("nr4")],
-    [18600, () => landRow("nr5")],
-    [19200, () => landRow("nr6")],
-    [21400, () => $("outro").classList.add("on")],
+    [2600,  () => $("intro").classList.add("off")],
+    [3100,  () => caption("Log gift cards straight to Google Sheets.")],
+    [5000,  () => $("tap1").classList.add("go")],
+    [5700,  () => { show("camera"); caption('Scan <span class="hi">1 — or up to 6</span> cards in one photo.'); }],
+    [9200,  () => $("tap2").classList.add("go")],
+    [9700,  () => $("flash").classList.add("go")],
+    [10100, () => { show("processing"); caption("AI reads every card — automatically."); }],
+    [12800, () => { show("review"); caption("All 6 cards on one screen. Confirm and save."); }],
+    [13000, () => $("rc1").classList.add("in")],
+    [13300, () => $("rc2").classList.add("in")],
+    [13600, () => $("rc3").classList.add("in")],
+    [13900, () => $("rc4").classList.add("in")],
+    [14200, () => $("rc5").classList.add("in")],
+    [14500, () => $("rc6").classList.add("in")],
+    [17000, () => $("tap3").classList.add("go")],
+    [17600, () => show("saving")],
+    [18500, () => { show("success"); caption("6 rows land in your Google Sheet."); }],
+    [18800, () => landRow("nr1")],
+    [19400, () => landRow("nr2")],
+    [20000, () => landRow("nr3")],
+    [20600, () => landRow("nr4")],
+    [21200, () => landRow("nr5")],
+    [21800, () => landRow("nr6")],
+    [24000, () => $("outro").classList.add("on")],
   ];
   steps.forEach(([t, fn]) => setTimeout(fn, t));
 </script>
