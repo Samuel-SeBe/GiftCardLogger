@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { grantReferralReward } from "@/lib/referral";
 
 // Stripe calls this endpoint (configured in the Stripe dashboard) whenever
 // a subscription changes. It is the single source of truth for whether a
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq("id", userId);
+
+        // First successful payment: reward this user's referrer, if any.
+        try {
+          await grantReferralReward(stripe, userId);
+        } catch (e) {
+          console.error("Referral reward failed:", e);
+        }
       }
       break;
     }

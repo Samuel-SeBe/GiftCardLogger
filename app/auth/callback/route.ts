@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -30,10 +31,35 @@ export async function GET(request: Request) {
       }
 
       const admin = createAdminClient();
+
+      // Referral attribution happens only at account creation, never on
+      // later sign-ins, and never to oneself.
+      const { data: existing } = await admin
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!existing) {
+        const cookieStore = await cookies();
+        const refCode = cookieStore.get("gcs_ref")?.value;
+        if (refCode) {
+          const { data: referrer } = await admin
+            .from("users")
+            .select("id")
+            .eq("referral_code", refCode)
+            .maybeSingle();
+          if (referrer && referrer.id !== user.id) {
+            row.referred_by = referrer.id;
+          }
+        }
+      }
+
       const { error: upsertError } = await admin.from("users").upsert(row);
 
       if (!upsertError) {
-        return NextResponse.redirect(`${origin}/`);
+        const res = NextResponse.redirect(`${origin}/`);
+        res.cookies.delete("gcs_ref");
+        return res;
       }
       console.error("Failed to upsert user row:", upsertError.message);
     }

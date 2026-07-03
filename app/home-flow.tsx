@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 type Card = {
@@ -466,6 +467,12 @@ export default function HomeFlow({
           Free trial: {trial.used} of {trial.limit} uploads used
         </p>
       )}
+      <Link
+        href="/referral"
+        className="mt-6 text-center text-sm font-medium text-blue-600 underline dark:text-blue-400"
+      >
+        Refer a friend — earn free months
+      </Link>
 
       {/* Temporary while building: lets us test with multiple accounts. */}
       <button

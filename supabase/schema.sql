@@ -19,3 +19,13 @@ create table public.users (
 -- code (service role key), so nobody can reset their own trial count,
 -- change their subscription status, or read stored tokens from a browser.
 alter table public.users enable row level security;
+
+-- Referral program (added after launch of the base schema; existing
+-- databases get these via: Step "Refer a friend" in SETUP.md)
+-- referral_code: the user's shareable code (giftcardsnapper.com/?ref=CODE)
+-- referred_by: who referred this user, captured at first sign-in
+-- referral_rewarded_at: set once this user's first payment has granted
+--   their referrer a free month, so it can never grant twice
+alter table public.users add column referral_code text unique;
+alter table public.users add column referred_by uuid references public.users(id);
+alter table public.users add column referral_rewarded_at timestamptz;

@@ -7,6 +7,20 @@ import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 export default async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Referral links look like /?ref=CODE. Remember the code for 30 days so
+  // it survives the Google sign-in round-trip.
+  const ref = request.nextUrl.searchParams.get("ref");
+  const stamp = (res: NextResponse) => {
+    if (ref && /^[A-Z0-9]{4,16}$/i.test(ref)) {
+      res.cookies.set("gcs_ref", ref.toUpperCase(), {
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+        sameSite: "lax",
+      });
+    }
+    return res;
+  };
+
   const supabase = createServerClient(supabaseUrl(), supabaseAnonKey(), {
       cookies: {
         getAll() {
@@ -35,22 +49,22 @@ export default async function proxy(request: NextRequest) {
   // API routes speak JSON and enforce auth themselves — a redirect to the
   // login page would only confuse their callers.
   if (path.startsWith("/api")) {
-    return response;
+    return stamp(response);
   }
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return stamp(NextResponse.redirect(url));
   }
 
   if (user && path === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
-    return NextResponse.redirect(url);
+    return stamp(NextResponse.redirect(url));
   }
 
-  return response;
+  return stamp(response);
 }
 
 export const config = {

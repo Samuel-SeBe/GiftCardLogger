@@ -345,6 +345,22 @@ No real money moves in test mode. Before launch we swap in live keys
 
 ---
 
+# Refer a friend — one-time database update
+
+The referral program ("friend subscribes → you get a free month") needs
+three new columns. In Supabase → **SQL Editor** → New query, run:
+
+```sql
+alter table public.users add column referral_code text unique;
+alter table public.users add column referred_by uuid references public.users(id);
+alter table public.users add column referral_rewarded_at timestamptz;
+```
+
+That's the whole setup — rewards are granted automatically as Stripe
+credit when a referred friend's first payment succeeds.
+
+---
+
 # Step 6a — Point giftcardsnapper.com at the app
 
 All dashboard configuration — no code changes.
