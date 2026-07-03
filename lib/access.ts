@@ -1,4 +1,4 @@
-export const TRIAL_UPLOAD_LIMIT = 3;
+export const TRIAL_UPLOAD_LIMIT = 5;
 
 // Who may upload:
 // - "active": paying subscriber (managed by the Stripe webhook)

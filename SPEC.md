@@ -182,11 +182,11 @@ Never ask the user to create a spreadsheet manually.
 
 # 8. Trial
 
-Every account receives: three free image uploads.
+Every account receives: five free image uploads.
 
 Uploads are counted. Gift cards are not counted.
 
-After third successful upload: block upload, display subscription screen.
+After fifth successful upload: block upload, display subscription screen.
 
 Successful payment unlocks unlimited uploads.
 

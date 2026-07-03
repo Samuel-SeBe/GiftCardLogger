@@ -261,7 +261,7 @@ The AI that reads gift cards out of photos is Google Gemini.
 
 # Step 5 — Trial limit, free passes, and Stripe billing
 
-Every account gets 3 free image uploads. After that, the app shows a
+Every account gets 5 free image uploads. After that, the app shows a
 subscription screen. Two kinds of people skip the limit entirely:
 
 - **Paying subscribers** (managed automatically by Stripe)
@@ -331,8 +331,8 @@ To revoke a pass, set it back to `trial`.
 ## Step 5, Part E — Test the whole money loop
 
 1. Sign in with a **different Google account** than your own (it gets its
-   own 3 free uploads).
-2. Upload 3 photos, then try a 4th → the subscription screen should appear
+   own 5 free uploads).
+2. Upload 5 photos, then try a 6th → the subscription screen should appear
    showing your price.
 3. Tap **Subscribe** → Stripe's checkout opens. Pay with Stripe's test
    card: number `4242 4242 4242 4242`, any future expiry date, any CVC,

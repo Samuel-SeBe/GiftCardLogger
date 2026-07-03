@@ -1,4 +1,5 @@
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { TRIAL_UPLOAD_LIMIT } from "@/lib/access";
 import SubscribeButton from "./subscribe-button";
 
 // Always render fresh so a price change in Stripe shows up immediately.
@@ -28,8 +29,9 @@ export default async function SubscribePage() {
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
       <h1 className="text-2xl font-bold">Your free trial is complete</h1>
       <p className="max-w-xs text-sm opacity-70">
-        You&apos;ve used your 3 free uploads. Subscribe for unlimited uploads
-        and keep logging cards straight into your spreadsheet.
+        You&apos;ve used your {TRIAL_UPLOAD_LIMIT} free uploads. Subscribe for
+        unlimited uploads and keep logging cards straight into your
+        spreadsheet.
       </p>
       {configured ? (
         <>
