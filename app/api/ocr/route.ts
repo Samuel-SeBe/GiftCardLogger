@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { extractCardsFromImage } from "@/lib/gemini";
-import { canUpload, TRIAL_UPLOAD_LIMIT } from "@/lib/access";
+import { TRIAL_UPLOAD_LIMIT } from "@/lib/access";
+import { getAllowance, recordUpload } from "@/lib/usage";
 
 // Accepts one photo, runs OCR, and returns the extracted gift cards.
 // The image lives only in memory for the duration of this request — it is
@@ -16,11 +17,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
-  // Enforce the free-trial limit before doing any work.
+  // Enforce trial and plan limits before doing any work.
   const admin = createAdminClient();
   const { data: row, error: rowError } = await admin
     .from("users")
-    .select("trial_uploads_used, subscription_status")
+    .select(
+      "trial_uploads_used, subscription_status, plan, current_period_start"
+    )
     .eq("id", user.id)
     .single();
   if (rowError || !row) {
@@ -29,8 +32,9 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-  if (!canUpload(row)) {
-    return NextResponse.json({ error: "trial_expired" }, { status: 402 });
+  const allowance = await getAllowance({ id: user.id, ...row });
+  if (!allowance.allowed) {
+    return NextResponse.json({ error: allowance.reason }, { status: 402 });
   }
 
   const form = await request.formData();
@@ -54,25 +58,36 @@ export async function POST(request: Request) {
     );
   }
 
-  // Count the successful upload against the free trial.
-  await admin
-    .from("users")
-    .update({
-      trial_uploads_used: row.trial_uploads_used + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  // Record the successful upload (all tiers — this is also the usage
+  // dataset for pricing decisions).
+  await recordUpload(user.id, cards.length);
 
-  // Tell trial users where they stand; null for subscribers/free passes.
   const onTrial =
     row.subscription_status !== "active" &&
     row.subscription_status !== "complimentary";
-  const trial = onTrial
+  if (onTrial) {
+    await admin
+      .from("users")
+      .update({
+        trial_uploads_used: row.trial_uploads_used + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+  }
+
+  // Tell the client where the counter now stands (null = unlimited).
+  const usage = onTrial
     ? {
         used: Math.min(row.trial_uploads_used + 1, TRIAL_UPLOAD_LIMIT),
         limit: TRIAL_UPLOAD_LIMIT,
+        kind: "trial" as const,
       }
-    : null;
+    : allowance.usage
+      ? {
+          ...allowance.usage,
+          used: Math.min(allowance.usage.used + 1, allowance.usage.limit),
+        }
+      : null;
 
-  return NextResponse.json({ cards, trial });
+  return NextResponse.json({ cards, usage });
 }

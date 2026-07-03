@@ -345,6 +345,48 @@ No real money moves in test mode. Before launch we swap in live keys
 
 ---
 
+# Pricing tiers — database update + Stripe products
+
+The app has three plans: **Basic** (50 uploads/month), **Pro** (250/month),
+and **Unlimited**. Caps are anchored to each subscriber's billing cycle.
+
+## One-time database update
+
+Supabase → SQL Editor:
+
+```sql
+alter table public.users add column plan text;
+alter table public.users add column current_period_start timestamptz;
+
+create table public.usage_events (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  cards_detected smallint not null default 0,
+  created_at timestamptz not null default now()
+);
+create index usage_events_user_time on public.usage_events (user_id, created_at);
+alter table public.usage_events enable row level security;
+```
+
+## Stripe setup (applies to the live-mode setup too)
+
+1. Create **three products**, each with one monthly recurring price:
+   Gift Card Snapper Basic / Pro / Unlimited.
+2. Vercel env vars — the old `STRIPE_PRICE_ID` is replaced by three:
+
+   | Name | Value |
+   |---|---|
+   | `STRIPE_PRICE_ID_BASIC` | `price_...` |
+   | `STRIPE_PRICE_ID_PRO` | `price_...` |
+   | `STRIPE_PRICE_ID_UNLIMITED` | `price_...` |
+
+3. Customer portal (Settings → Billing → Customer portal): under
+   Subscriptions, enable **customers can switch plans** and add all three
+   products — this is what powers the in-app "Upgrade My Plan" path, with
+   proration handled by Stripe.
+
+---
+
 # Refer a friend — one-time database update
 
 The referral program ("friend subscribes → you get a free month") needs

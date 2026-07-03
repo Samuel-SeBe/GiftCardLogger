@@ -24,23 +24,23 @@ type Phase =
 
 // The entire primary workflow lives here:
 // Take Photo -> Processing -> Review -> Save -> Success (repeat)
-type Trial = { used: number; limit: number } | null;
+type Usage = { used: number; limit: number; kind: "trial" | "plan" } | null;
 
 export default function HomeFlow({
   sheetUrl,
   sheetJustCreated,
-  initialTrial,
+  initialUsage,
   subscribed = false,
   initialPhase,
 }: {
   sheetUrl: string | null;
   sheetJustCreated: boolean;
-  initialTrial: Trial;
+  initialUsage: Usage;
   subscribed?: boolean;
   initialPhase?: Phase;
 }) {
   const [phase, setPhase] = useState<Phase>(initialPhase ?? { name: "home" });
-  const [trial, setTrial] = useState<Trial>(initialTrial);
+  const [usage, setUsage] = useState<Usage>(initialUsage);
   // Which card's Value field was edited last — anchors the "apply to all
   // cards" suggestion chip.
   const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
@@ -61,7 +61,9 @@ export default function HomeFlow({
       const data = await res.json().catch(() => null);
 
       if (res.status === 402) {
-        router.push("/subscribe");
+        router.push(
+          data?.error === "plan_limit" ? "/subscribe?limit=hit" : "/subscribe"
+        );
         return;
       }
       if (!res.ok) {
@@ -71,8 +73,8 @@ export default function HomeFlow({
         });
         return;
       }
-      if (data?.trial !== undefined) {
-        setTrial(data.trial);
+      if (data?.usage !== undefined) {
+        setUsage(data.usage);
       }
       if (!data?.cards?.length) {
         setPhase({
@@ -253,9 +255,11 @@ export default function HomeFlow({
         >
           Choose Existing Photo
         </button>
-        {trial && (
+{usage && (
           <p className="text-xs opacity-60">
-            Free trial: {trial.used} of {trial.limit} uploads used
+            {usage.kind === "trial"
+              ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
+              : `This billing month: ${usage.used} of ${usage.limit} uploads used`}
           </p>
         )}
       </div>
@@ -478,9 +482,11 @@ export default function HomeFlow({
         Photos and card details are never stored — they go only to your
         sheet.
       </p>
-      {trial && (
+      {usage && (
         <p className="text-center text-xs opacity-60">
-          Free trial: {trial.used} of {trial.limit} uploads used
+          {usage.kind === "trial"
+            ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
+            : `This billing month: ${usage.used} of ${usage.limit} uploads used`}
         </p>
       )}
       <Link

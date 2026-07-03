@@ -1,6 +1,7 @@
 import "server-only";
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isPlanId, priceIdFor } from "@/lib/plans";
 
 // Unambiguous alphabet: no 0/O or 1/I lookalikes.
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -74,16 +75,20 @@ export async function grantReferralReward(
 
   const { data: referrer } = await admin
     .from("users")
-    .select("id, email, stripe_customer_id")
+    .select("id, email, stripe_customer_id, plan, subscription_status")
     .eq("id", payer.referred_by)
     .single();
   if (!referrer) {
     return;
   }
 
-  const price = await stripe.prices.retrieve(
-    process.env.STRIPE_PRICE_ID!.trim()
-  );
+  // "One free month" of the referrer's own plan; Basic-priced when they
+  // haven't picked a plan yet.
+  const referrerPlan =
+    referrer.subscription_status === "active" && isPlanId(referrer.plan)
+      ? referrer.plan
+      : "basic";
+  const price = await stripe.prices.retrieve(priceIdFor(referrerPlan));
   if (!price.unit_amount) {
     return;
   }

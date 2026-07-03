@@ -1,5 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
+import { plansConfigured } from "@/lib/plans";
 
 // Lazy so a missing key breaks only billing endpoints, never the build.
 export function getStripe(): Stripe {
@@ -11,7 +12,5 @@ export function getStripe(): Stripe {
 }
 
 export function stripeConfigured(): boolean {
-  return Boolean(
-    process.env.STRIPE_SECRET_KEY?.trim() && process.env.STRIPE_PRICE_ID?.trim()
-  );
+  return Boolean(process.env.STRIPE_SECRET_KEY?.trim()) && plansConfigured();
 }

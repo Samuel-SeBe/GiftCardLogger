@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { grantReferralReward } from "@/lib/referral";
+import { planForPriceId } from "@/lib/plans";
 
 // Stripe calls this endpoint (configured in the Stripe dashboard) whenever
 // a subscription changes. It is the single source of truth for whether a
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       break;
     }
 
-    // Renewals, cancellations, failed payments.
+    // Plan choices, upgrades/downgrades, renewals, cancellations.
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
@@ -68,13 +69,35 @@ export async function POST(request: Request) {
           event.type !== "customer.subscription.deleted" &&
           (subscription.status === "active" ||
             subscription.status === "trialing");
+
+        const update: Record<string, unknown> = {
+          subscription_status: active ? "active" : "canceled",
+          stripe_customer_id: subscription.customer as string,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Which tier, and when its current billing period started (the
+        // anchor for monthly upload metering). Newer Stripe API versions
+        // carry the period on the subscription item.
+        const item = subscription.items?.data?.[0];
+        const plan = item?.price?.id ? planForPriceId(item.price.id) : null;
+        if (plan) {
+          update.plan = plan;
+        }
+        const periodStart =
+          (item as { current_period_start?: number } | undefined)
+            ?.current_period_start ??
+          (subscription as unknown as { current_period_start?: number })
+            .current_period_start;
+        if (periodStart) {
+          update.current_period_start = new Date(
+            periodStart * 1000
+          ).toISOString();
+        }
+
         await admin
           .from("users")
-          .update({
-            subscription_status: active ? "active" : "canceled",
-            stripe_customer_id: subscription.customer as string,
-            updated_at: new Date().toISOString(),
-          })
+          .update(update)
           .eq("id", userId)
           // A hand-granted free pass always survives subscription churn.
           .neq("subscription_status", "complimentary");

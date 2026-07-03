@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { isPlanId, priceIdFor } from "@/lib/plans";
 
-// Starts a Stripe Checkout session for the one monthly plan and returns
-// its URL for the browser to redirect to.
+// Starts a Stripe Checkout session for the chosen plan and returns its
+// URL for the browser to redirect to.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -18,6 +19,12 @@ export async function POST(request: Request) {
       { error: "Billing is not configured" },
       { status: 503 }
     );
+  }
+
+  const body = await request.json().catch(() => null);
+  const plan = body?.plan;
+  if (!isPlanId(plan)) {
+    return NextResponse.json({ error: "Unknown plan" }, { status: 400 });
   }
 
   const stripe = getStripe();
@@ -53,9 +60,7 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [
-        { price: process.env.STRIPE_PRICE_ID!.trim(), quantity: 1 },
-      ],
+      line_items: [{ price: priceIdFor(plan), quantity: 1 }],
       client_reference_id: user.id,
       subscription_data: { metadata: { user_id: user.id } },
       allow_promotion_codes: true,

@@ -29,3 +29,21 @@ alter table public.users enable row level security;
 alter table public.users add column referral_code text unique;
 alter table public.users add column referred_by uuid references public.users(id);
 alter table public.users add column referral_rewarded_at timestamptz;
+
+-- Pricing tiers and usage metering (run on existing databases too)
+-- plan: basic | pro | unlimited, set by the Stripe webhook
+-- current_period_start: the subscriber's billing-cycle anchor for
+--   monthly upload metering
+alter table public.users add column plan text;
+alter table public.users add column current_period_start timestamptz;
+
+-- One row per successful upload. Counts and timestamps only — no card
+-- data. Server-only access (RLS with no policies), same as users.
+create table public.usage_events (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  cards_detected smallint not null default 0,
+  created_at timestamptz not null default now()
+);
+create index usage_events_user_time on public.usage_events (user_id, created_at);
+alter table public.usage_events enable row level security;

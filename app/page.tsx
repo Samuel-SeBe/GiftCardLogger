@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
-import { TRIAL_UPLOAD_LIMIT } from "@/lib/access";
+import { getAllowance } from "@/lib/usage";
 import HomeFlow from "./home-flow";
 import { BetaBadge, Logo } from "@/components/logo";
 
@@ -39,24 +39,23 @@ export default async function HomePage() {
     redirect("/reconnect");
   }
 
-  // Trial users see how many free uploads they've used; subscribers and
-  // free-pass users see nothing.
-  let trial: { used: number; limit: number } | null = null;
+  // Usage counter: trial progress for trial users, this-billing-month
+  // progress for limited plans, nothing for unlimited/free-pass users.
   const admin = createAdminClient();
   const { data: row } = await admin
     .from("users")
-    .select("trial_uploads_used, subscription_status")
+    .select(
+      "trial_uploads_used, subscription_status, plan, current_period_start"
+    )
     .eq("id", user.id)
     .single();
-  if (
-    row &&
-    row.subscription_status !== "active" &&
-    row.subscription_status !== "complimentary"
-  ) {
-    trial = {
-      used: Math.min(row.trial_uploads_used, TRIAL_UPLOAD_LIMIT),
-      limit: TRIAL_UPLOAD_LIMIT,
-    };
+  let usage = null;
+  if (row) {
+    try {
+      usage = (await getAllowance({ id: user.id, ...row })).usage;
+    } catch (e) {
+      console.error("Usage check failed (continuing):", e);
+    }
   }
   const subscribed = row?.subscription_status === "active";
 
@@ -71,7 +70,7 @@ export default async function HomePage() {
         <HomeFlow
           sheetUrl={sheetUrl}
           sheetJustCreated={sheetJustCreated}
-          initialTrial={trial}
+          initialUsage={usage}
           subscribed={subscribed}
         />
       </main>
