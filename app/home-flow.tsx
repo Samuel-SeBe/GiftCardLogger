@@ -31,16 +31,21 @@ export default function HomeFlow({
   sheetJustCreated,
   initialUsage,
   subscribed = false,
+  justSubscribed = false,
+  planName = null,
   initialPhase,
 }: {
   sheetUrl: string | null;
   sheetJustCreated: boolean;
   initialUsage: Usage;
   subscribed?: boolean;
+  justSubscribed?: boolean;
+  planName?: string | null;
   initialPhase?: Phase;
 }) {
   const [phase, setPhase] = useState<Phase>(initialPhase ?? { name: "home" });
   const [usage, setUsage] = useState<Usage>(initialUsage);
+  const [showSubBanner, setShowSubBanner] = useState(justSubscribed);
   // Which card's Value field was edited last — anchors the "apply to all
   // cards" suggestion chip.
   const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
@@ -255,7 +260,7 @@ export default function HomeFlow({
         >
           Choose Existing Photo
         </button>
-{usage && (
+        {usage && !(subscribed && usage.kind === "trial") && (
           <p className="text-xs opacity-60">
             {usage.kind === "trial"
               ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
@@ -449,6 +454,25 @@ export default function HomeFlow({
           {phase.message}
         </p>
       )}
+      {showSubBanner && (
+        <div className="flex flex-col items-center gap-1 rounded-2xl bg-green-100 px-4 py-4 text-center dark:bg-green-950">
+          <span className="text-2xl" aria-hidden="true">
+            🎉
+          </span>
+          <p className="font-semibold text-green-900 dark:text-green-200">
+            {planName ? `You're on the ${planName} plan!` : "You're subscribed!"}
+          </p>
+          <p className="text-xs text-green-800 opacity-80 dark:text-green-300">
+            Snap away — your uploads are unlocked.
+          </p>
+          <button
+            onClick={() => setShowSubBanner(false)}
+            className="mt-1 text-xs text-green-800 underline opacity-70 dark:text-green-300"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       {sheetJustCreated && sheetUrl && (
         <p className="rounded-lg bg-green-100 px-4 py-3 text-center text-sm text-green-900 dark:bg-green-950 dark:text-green-200">
           We created{" "}
@@ -482,7 +506,7 @@ export default function HomeFlow({
         Photos and card details are never stored — they go only to your
         sheet.
       </p>
-      {usage && (
+      {usage && !(subscribed && usage.kind === "trial") && (
         <p className="text-center text-xs opacity-60">
           {usage.kind === "trial"
             ? `Free trial: ${usage.used} of ${usage.limit} uploads used`

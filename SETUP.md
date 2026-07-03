@@ -347,7 +347,7 @@ No real money moves in test mode. Before launch we swap in live keys
 
 # Pricing tiers — database update + Stripe products
 
-The app has three plans: **Basic** (50 uploads/month), **Pro** (250/month),
+The app has three plans: **Basic** (100 uploads/month), **Pro** (250/month),
 and **Unlimited**. Caps are anchored to each subscriber's billing cycle.
 
 ## One-time database update

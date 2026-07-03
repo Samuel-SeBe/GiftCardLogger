@@ -11,7 +11,7 @@ export const PLANS: Record<
   PlanId,
   { name: string; uploadsPerMonth: number | null }
 > = {
-  basic: { name: "Basic", uploadsPerMonth: 50 },
+  basic: { name: "Basic", uploadsPerMonth: 100 },
   pro: { name: "Pro", uploadsPerMonth: 250 },
   unlimited: { name: "Unlimited", uploadsPerMonth: null },
 };

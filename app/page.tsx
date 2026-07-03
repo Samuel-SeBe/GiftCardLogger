@@ -3,12 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
 import { getAllowance } from "@/lib/usage";
+import { PLANS, isPlanId } from "@/lib/plans";
 import HomeFlow from "./home-flow";
 import { Logo } from "@/components/logo";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
 // action (Choose Existing Photo). Nothing else, per the spec.
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ subscribed?: string; billing?: string }>;
+}) {
+  const { subscribed: subParam, billing: billingParam } = await searchParams;
+  const returnedFromBilling = subParam === "1" || billingParam === "1";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -39,16 +47,32 @@ export default async function HomePage() {
     redirect("/reconnect");
   }
 
+  const admin = createAdminClient();
+  const columns =
+    "trial_uploads_used, subscription_status, plan, current_period_start";
+
+  // Read the account. If we just came back from Stripe checkout, the
+  // webhook that flips the account to "active" may be a beat behind the
+  // redirect — retry briefly so the confirmation and counter are correct.
+  let row: {
+    trial_uploads_used: number;
+    subscription_status: string;
+    plan: string | null;
+    current_period_start: string | null;
+  } | null = null;
+  for (let attempt = 0; attempt < (returnedFromBilling ? 4 : 1); attempt++) {
+    const { data } = await admin
+      .from("users")
+      .select(columns)
+      .eq("id", user.id)
+      .single();
+    row = data;
+    if (!returnedFromBilling || data?.subscription_status === "active") break;
+    await new Promise((r) => setTimeout(r, 800));
+  }
+
   // Usage counter: trial progress for trial users, this-billing-month
   // progress for limited plans, nothing for unlimited/free-pass users.
-  const admin = createAdminClient();
-  const { data: row } = await admin
-    .from("users")
-    .select(
-      "trial_uploads_used, subscription_status, plan, current_period_start"
-    )
-    .eq("id", user.id)
-    .single();
   let usage = null;
   if (row) {
     try {
@@ -57,20 +81,30 @@ export default async function HomePage() {
       console.error("Usage check failed (continuing):", e);
     }
   }
+
   const subscribed = row?.subscription_status === "active";
+  const planName =
+    subscribed && isPlanId(row?.plan) ? PLANS[row.plan].name : null;
 
   return (
     <>
-      <header className="flex items-center justify-center gap-2 p-4">
-        <Logo size={26} />
-        <span className="text-sm font-bold">Gift Card Snapper</span>
+      <header className="flex items-center justify-center gap-2.5 p-4">
+        <Logo size={40} />
+        <span className="text-lg font-bold">Gift Card Snapper</span>
+        {planName && (
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+            {planName}
+          </span>
+        )}
       </header>
-      <main className="flex flex-1 flex-col items-center gap-4 p-6 pt-[8vh]">
+      <main className="flex flex-1 flex-col items-center gap-4 p-6 pt-[6vh]">
         <HomeFlow
           sheetUrl={sheetUrl}
           sheetJustCreated={sheetJustCreated}
           initialUsage={usage}
           subscribed={subscribed}
+          justSubscribed={returnedFromBilling && subscribed}
+          planName={planName}
         />
       </main>
     </>

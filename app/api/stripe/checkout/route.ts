@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       client_reference_id: user.id,
       subscription_data: { metadata: { user_id: user.id } },
       allow_promotion_codes: true,
-      success_url: `${origin}/`,
+      success_url: `${origin}/?subscribed=1`,
       cancel_url: `${origin}/subscribe`,
     });
 
