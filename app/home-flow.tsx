@@ -22,7 +22,13 @@ type Phase =
 
 // The entire primary workflow lives here:
 // Take Photo -> Processing -> Review -> Save -> Success (repeat)
-export default function HomeFlow() {
+export default function HomeFlow({
+  sheetUrl,
+  sheetJustCreated,
+}: {
+  sheetUrl: string | null;
+  sheetJustCreated: boolean;
+}) {
   const [phase, setPhase] = useState<Phase>({ name: "home" });
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
@@ -178,6 +184,16 @@ export default function HomeFlow() {
         <p className="opacity-70">
           {phase.count} of {phase.count} cards saved.
         </p>
+        {sheetUrl && (
+          <a
+            href={sheetUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-blue-600 underline dark:text-blue-400"
+          >
+            View them in your sheet
+          </a>
+        )}
         <p className="text-sm opacity-60">
           Tip: several cards fit in one photo.
         </p>
@@ -312,6 +328,9 @@ export default function HomeFlow() {
         >
           Approve &amp; Save
         </button>
+        <p className="text-center text-xs opacity-50">
+          Card details are never stored — they go only to your sheet.
+        </p>
         <button
           onClick={() => setPhase({ name: "home" })}
           className="text-center text-sm opacity-60 underline"
@@ -328,6 +347,20 @@ export default function HomeFlow() {
       {phase.name === "error" && (
         <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
           {phase.message}
+        </p>
+      )}
+      {sheetJustCreated && sheetUrl && (
+        <p className="rounded-lg bg-green-100 px-4 py-3 text-center text-sm text-green-900 dark:bg-green-950 dark:text-green-200">
+          We created{" "}
+          <a
+            href={sheetUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium underline"
+          >
+            Gift Card Inventory
+          </a>{" "}
+          in your Google Drive — every card you save lands there.
         </p>
       )}
       <p className="text-center text-sm opacity-70">

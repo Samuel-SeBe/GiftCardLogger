@@ -67,6 +67,11 @@ function LoginContent() {
         </svg>
         {loading ? "Redirecting…" : "Sign in with Google"}
       </button>
+
+      <p className="max-w-xs text-center text-xs opacity-50">
+        Your card details are never stored by this app — they go straight to
+        a Google Sheet in your own Drive.
+      </p>
     </main>
   );
 }

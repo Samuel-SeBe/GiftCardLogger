@@ -17,9 +17,16 @@ export default async function HomePage() {
 
   // First visit: create the user's "Gift Card Inventory" spreadsheet.
   let needsReauth = false;
+  let sheetUrl: string | null = null;
+  let sheetJustCreated = false;
   try {
     const provisioning = await ensureSpreadsheet(user.id);
-    needsReauth = provisioning.status === "reauth";
+    if (provisioning.status === "reauth") {
+      needsReauth = true;
+    } else {
+      sheetUrl = `https://docs.google.com/spreadsheets/d/${provisioning.spreadsheetId}`;
+      sheetJustCreated = provisioning.created;
+    }
   } catch (e) {
     // Don't block the home screen on a hiccup; provisioning is retried on
     // the next visit and before any save.
@@ -31,7 +38,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-      <HomeFlow />
+      <HomeFlow sheetUrl={sheetUrl} sheetJustCreated={sheetJustCreated} />
     </main>
   );
 }

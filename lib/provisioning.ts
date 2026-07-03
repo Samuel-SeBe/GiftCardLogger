@@ -8,7 +8,14 @@ import {
 } from "@/lib/google";
 
 export type ProvisioningResult =
-  | { status: "ready"; spreadsheetId: string; accessToken: string }
+  | {
+      status: "ready";
+      spreadsheetId: string;
+      accessToken: string;
+      // True when the spreadsheet was created just now (first visit, or
+      // the user had deleted theirs) so the UI can announce it once.
+      created: boolean;
+    }
   | { status: "reauth" };
 
 // Makes sure the signed-in user has their inventory spreadsheet: creates
@@ -47,7 +54,12 @@ export async function ensureSpreadsheet(
     user.spreadsheet_id &&
     (await spreadsheetExists(accessToken, user.spreadsheet_id))
   ) {
-    return { status: "ready", spreadsheetId: user.spreadsheet_id, accessToken };
+    return {
+      status: "ready",
+      spreadsheetId: user.spreadsheet_id,
+      accessToken,
+      created: false,
+    };
   }
 
   const spreadsheetId = await createInventorySpreadsheet(accessToken);
@@ -69,5 +81,5 @@ export async function ensureSpreadsheet(
   if (updateError) {
     throw new Error(`Failed to save spreadsheet ID: ${updateError.message}`);
   }
-  return { status: "ready", spreadsheetId, accessToken };
+  return { status: "ready", spreadsheetId, accessToken, created: true };
 }
