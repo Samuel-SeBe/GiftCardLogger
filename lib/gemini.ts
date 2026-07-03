@@ -18,11 +18,17 @@ const MODEL = "gemini-2.5-flash";
 const PROMPT = `This photo contains one or more gift cards — store gift cards (e.g. Amazon, Best Buy, Home Depot) and/or network-branded prepaid gift cards (Visa, Mastercard, American Express). Extract every visible card.
 
 For each card return:
-- vendor: the brand name shown on the card (e.g. "Amazon", "Best Buy", "Home Depot", "Vanilla Visa", "Mastercard"). Unknown brands are fine — use whatever the card shows.
-- card_number: the card's main number, with spaces or dashes exactly as printed. For Amazon cards use the claim code as the card number.
-- pin: the PIN, CVV, or security code if one is visible (for American Express cards this is the 4-digit code on the front). Amazon cards have no PIN — use an empty string. If the code is hidden behind scratch-off material or on the unseen side of the card, use an empty string.
+- vendor: the brand name shown on the card (e.g. "Amazon", "Best Buy", "Home Depot", "DoorDash", "Vanilla Visa", "Mastercard"). Unknown brands are fine — use whatever the card shows.
+- card_number: the card's primary redemption number or code. This is usually the longest number printed on the card, or, for cards redeemed with a single gift/claim code (Amazon, DoorDash, and similar), the redemption code found in the scratch-off area.
+- pin: the SEPARATE PIN or security code — usually a short code, often under a scratch-off panel, or a CVV/4-digit code on network-branded (Visa/Mastercard/Amex) cards.
 - value: the card's dollar amount as a plain number string without a currency symbol (e.g. "25" or "26.50"). If no amount is shown, use an empty string.
 - expiration: the expiration date exactly as printed (e.g. "12/28"). Most store gift cards have none — use an empty string.
+
+Critical rules:
+- card_number and pin must be DIFFERENT values. Never copy the same code into both fields.
+- Many gift cards have only ONE redeemable code (no separate PIN). In that case, put that single code in card_number and leave pin as an empty string.
+- Only use a value for pin when there is genuinely a distinct second code separate from the card number.
+- If a code is hidden behind unscratched material or on a side not shown, use an empty string for it.
 
 Only include cards that are actually visible in the photo. If there are no gift cards, return an empty array.`;
 
@@ -91,15 +97,31 @@ export async function extractCardsFromImage(
     throw new Error("Unexpected model output: not an array");
   }
 
-  return parsed.map((card) => ({
-    vendor: asTrimmedString(card?.vendor),
-    card_number: asTrimmedString(card?.card_number),
-    pin: asTrimmedString(card?.pin),
-    value: asTrimmedString(card?.value),
-    expiration: asTrimmedString(card?.expiration),
-  }));
+  return parsed.map((card) => {
+    const cardNumber = asTrimmedString(card?.card_number);
+    let pin = asTrimmedString(card?.pin);
+    // Safety net: some single-code cards (e.g. DoorDash) tempt the model
+    // into echoing the redemption code into the PIN too. A PIN identical
+    // to the card number is never real — drop it.
+    if (pin && sameCode(pin, cardNumber)) {
+      pin = "";
+    }
+    return {
+      vendor: asTrimmedString(card?.vendor),
+      card_number: cardNumber,
+      pin,
+      value: asTrimmedString(card?.value),
+      expiration: asTrimmedString(card?.expiration),
+    };
+  });
 }
 
 function asTrimmedString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+// Compares two codes ignoring case and spacing/dashes.
+function sameCode(a: string, b: string): boolean {
+  const norm = (s: string) => s.replace(/[\s-]/g, "").toLowerCase();
+  return norm(a) === norm(b) && norm(a).length > 0;
 }
