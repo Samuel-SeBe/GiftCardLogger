@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
 import { getAllowance } from "@/lib/usage";
 import HomeFlow from "./home-flow";
-import { BetaBadge, Logo } from "@/components/logo";
+import { Logo } from "@/components/logo";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
 // action (Choose Existing Photo). Nothing else, per the spec.
@@ -64,7 +64,6 @@ export default async function HomePage() {
       <header className="flex items-center justify-center gap-2 p-4">
         <Logo size={26} />
         <span className="text-sm font-bold">Gift Card Snapper</span>
-        <BetaBadge />
       </header>
       <main className="flex flex-1 flex-col items-center gap-4 p-6 pt-[8vh]">
         <HomeFlow
