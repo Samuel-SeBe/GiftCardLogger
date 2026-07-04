@@ -13,8 +13,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Absolute base so link previews (iMessage/WhatsApp) resolve the OG image.
+  metadataBase: new URL("https://www.giftcardsnapper.com"),
   title: "Gift Card Snapper",
   description: "Snap your gift cards. Get rows in Google Sheets.",
+  openGraph: {
+    title: "Gift Card Snapper",
+    description: "Snap your gift cards. Get rows in Google Sheets.",
+    url: "https://www.giftcardsnapper.com",
+    siteName: "Gift Card Snapper",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gift Card Snapper",
+    description: "Snap your gift cards. Get rows in Google Sheets.",
+  },
 };
 
 export const viewport: Viewport = {
