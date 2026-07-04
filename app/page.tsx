@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
 import { getAllowance } from "@/lib/usage";
+import { syncSubscriptionFromStripe } from "@/lib/subscription-sync";
 import { PLANS, isPlanId } from "@/lib/plans";
 import HomeFlow from "./home-flow";
 import { Logo } from "@/components/logo";
@@ -51,25 +52,23 @@ export default async function HomePage({
   const columns =
     "trial_uploads_used, subscription_status, plan, current_period_start";
 
-  // Read the account. If we just came back from Stripe checkout, the
-  // webhook that flips the account to "active" may be a beat behind the
-  // redirect — retry briefly so the confirmation and counter are correct.
-  let row: {
-    trial_uploads_used: number;
-    subscription_status: string;
-    plan: string | null;
-    current_period_start: string | null;
-  } | null = null;
-  for (let attempt = 0; attempt < (returnedFromBilling ? 4 : 1); attempt++) {
-    const { data } = await admin
-      .from("users")
-      .select(columns)
-      .eq("id", user.id)
-      .single();
-    row = data;
-    if (!returnedFromBilling || data?.subscription_status === "active") break;
-    await new Promise((r) => setTimeout(r, 800));
+  // If we just came back from Stripe checkout / billing portal, reconcile
+  // the subscription straight from Stripe rather than waiting on the
+  // webhook — so activation is correct even if the webhook is delayed,
+  // redirected, or misconfigured.
+  if (returnedFromBilling) {
+    try {
+      await syncSubscriptionFromStripe(user.id);
+    } catch (e) {
+      console.error("Subscription sync failed:", e);
+    }
   }
+
+  const { data: row } = await admin
+    .from("users")
+    .select(columns)
+    .eq("id", user.id)
+    .single();
 
   // Usage counter: trial progress for trial users, this-billing-month
   // progress for limited plans, nothing for unlimited/free-pass users.

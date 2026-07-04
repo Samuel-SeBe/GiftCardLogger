@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { grantReferralReward } from "@/lib/referral";
-import { planForPriceId } from "@/lib/plans";
+import { subscriptionToUpdate } from "@/lib/subscription";
 
 // Stripe calls this endpoint (configured in the Stripe dashboard) whenever
 // a subscription changes. It is the single source of truth for whether a
@@ -65,34 +65,19 @@ export async function POST(request: Request) {
       const subscription = event.data.object;
       const userId = subscription.metadata?.user_id;
       if (userId) {
-        const active =
-          event.type !== "customer.subscription.deleted" &&
-          (subscription.status === "active" ||
-            subscription.status === "trialing");
+        const { active, plan, periodStartIso } =
+          subscriptionToUpdate(subscription);
 
         const update: Record<string, unknown> = {
           subscription_status: active ? "active" : "canceled",
           stripe_customer_id: subscription.customer as string,
           updated_at: new Date().toISOString(),
         };
-
-        // Which tier, and when its current billing period started (the
-        // anchor for monthly upload metering). Newer Stripe API versions
-        // carry the period on the subscription item.
-        const item = subscription.items?.data?.[0];
-        const plan = item?.price?.id ? planForPriceId(item.price.id) : null;
         if (plan) {
           update.plan = plan;
         }
-        const periodStart =
-          (item as { current_period_start?: number } | undefined)
-            ?.current_period_start ??
-          (subscription as unknown as { current_period_start?: number })
-            .current_period_start;
-        if (periodStart) {
-          update.current_period_start = new Date(
-            periodStart * 1000
-          ).toISOString();
+        if (periodStartIso) {
+          update.current_period_start = periodStartIso;
         }
 
         await admin
