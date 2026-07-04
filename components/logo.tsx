@@ -1,6 +1,6 @@
-// The Gift Card Snapper mark: a gift card being "snapped" by a camera
-// lens, with a flash sparkle. Inline SVG so it's crisp at every size and
-// costs no extra download.
+// The Gift Card Snapper mark: a phone in camera mode with a gift card in
+// the viewfinder and a red shutter button. Inline SVG so it's crisp at
+// every size and costs no extra download.
 export function Logo({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
@@ -10,26 +10,58 @@ export function Logo({ size = 40 }: { size?: number }) {
           <stop offset="1" stopColor="#1d4ed8" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#gcs-grad)" />
-      <g transform="rotate(-6 28 30)">
-        <rect x="9" y="17" width="37" height="25" rx="4" fill="#ffffff" />
-        <rect x="9" y="23" width="37" height="5" fill="#93c5fd" />
-        <rect x="13" y="33" width="14" height="3" rx="1.5" fill="#cbd5e1" />
+      <rect width="64" height="64" rx="15" fill="url(#gcs-grad)" />
+      <rect x="16" y="5" width="32" height="54" rx="6" fill="#0b1220" />
+      <rect x="29" y="6.2" width="6" height="1" rx="0.5" fill="#33415c" />
+      <rect x="17.6" y="8" width="28.8" height="40.5" rx="3" fill="#a97a49" />
+      <g transform="rotate(-3 32 21)">
+        <rect
+          x="20.4"
+          y="12.6"
+          width="24"
+          height="18"
+          rx="2"
+          fill="#0b1e52"
+          opacity="0.22"
+        />
+        <rect x="20" y="12" width="24" height="18" rx="2" fill="#2563eb" />
+        <rect x="20" y="12" width="24" height="4.3" fill="#1e40af" />
+        <text
+          x="32"
+          y="20.2"
+          fontFamily="Arial, sans-serif"
+          fontWeight="800"
+          fontSize="3.5"
+          fill="#ffffff"
+          textAnchor="middle"
+        >
+          GIFT CARD
+        </text>
+        <text
+          x="32"
+          y="26.6"
+          fontFamily="monospace"
+          fontWeight="700"
+          fontSize="3"
+          fill="#dbeafe"
+          textAnchor="middle"
+        >
+          1234 5678
+        </text>
+        <path
+          d="M40.4 13 l0.8 1.6 1.6 0.8 -1.6 0.8 -0.8 1.6 -0.8 -1.6 -1.6 -0.8 1.6 -0.8 z"
+          fill="#fde047"
+        />
       </g>
-      <circle cx="44" cy="43" r="11.5" fill="#1e3a8a" />
       <circle
-        cx="44"
-        cy="43"
-        r="7.5"
+        cx="32"
+        cy="53.5"
+        r="4"
         fill="none"
         stroke="#ffffff"
-        strokeWidth="2.5"
+        strokeWidth="1.3"
       />
-      <circle cx="47" cy="40" r="2" fill="#ffffff" opacity="0.9" />
-      <path
-        d="M51 9 l2.3 4.6 4.6 2.3 -4.6 2.3 -2.3 4.6 -2.3 -4.6 -4.6 -2.3 4.6 -2.3 z"
-        fill="#fde047"
-      />
+      <circle cx="32" cy="53.5" r="2.8" fill="#ef4444" />
     </svg>
   );
 }
