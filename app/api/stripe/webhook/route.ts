@@ -65,11 +65,12 @@ export async function POST(request: Request) {
       const subscription = event.data.object;
       const userId = subscription.metadata?.user_id;
       if (userId) {
-        const { active, plan, periodStartIso } =
+        const { active, pastDue, plan, periodStartIso } =
           subscriptionToUpdate(subscription);
 
         const update: Record<string, unknown> = {
           subscription_status: active ? "active" : "canceled",
+          payment_past_due: active && pastDue,
           stripe_customer_id: subscription.customer as string,
           updated_at: new Date().toISOString(),
         };

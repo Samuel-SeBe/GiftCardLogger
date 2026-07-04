@@ -15,6 +15,7 @@ export const GRACE_ACTIVE_STATUSES = new Set([
 // Reduces a Stripe subscription to the fields we store.
 export function subscriptionToUpdate(sub: Stripe.Subscription): {
   active: boolean;
+  pastDue: boolean;
   plan: PlanId | null;
   periodStartIso: string | null;
 } {
@@ -28,6 +29,9 @@ export function subscriptionToUpdate(sub: Stripe.Subscription): {
     (sub as unknown as { current_period_start?: number }).current_period_start;
   return {
     active,
+    // A renewal that failed but is still within Stripe's retry window: the
+    // user keeps access, but we surface a "fix your card" banner.
+    pastDue: sub.status === "past_due",
     plan,
     periodStartIso: raw ? new Date(raw * 1000).toISOString() : null,
   };

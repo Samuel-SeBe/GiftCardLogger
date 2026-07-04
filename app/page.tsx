@@ -50,7 +50,7 @@ export default async function HomePage({
 
   const admin = createAdminClient();
   const columns =
-    "trial_uploads_used, subscription_status, plan, current_period_start";
+    "trial_uploads_used, subscription_status, plan, current_period_start, payment_past_due";
 
   // If we just came back from Stripe checkout / billing portal, reconcile
   // the subscription straight from Stripe rather than waiting on the
@@ -84,6 +84,7 @@ export default async function HomePage({
   const subscribed = row?.subscription_status === "active";
   const planName =
     subscribed && isPlanId(row?.plan) ? PLANS[row.plan].name : null;
+  const paymentPastDue = subscribed && row?.payment_past_due === true;
 
   return (
     <>
@@ -104,6 +105,7 @@ export default async function HomePage({
           subscribed={subscribed}
           justSubscribed={returnedFromBilling && subscribed}
           planName={planName}
+          paymentPastDue={paymentPastDue}
         />
       </main>
     </>

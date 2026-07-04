@@ -36,9 +36,10 @@ export async function syncSubscriptionFromStripe(userId: string): Promise<void> 
     subs.data.find((s) => GRACE_ACTIVE_STATUSES.has(s.status)) ?? subs.data[0];
   if (!sub) return;
 
-  const { active, plan, periodStartIso } = subscriptionToUpdate(sub);
+  const { active, pastDue, plan, periodStartIso } = subscriptionToUpdate(sub);
   const update: Record<string, unknown> = {
     subscription_status: active ? "active" : "canceled",
+    payment_past_due: active && pastDue,
     stripe_customer_id: row.stripe_customer_id,
     updated_at: new Date().toISOString(),
   };

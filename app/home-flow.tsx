@@ -33,6 +33,7 @@ export default function HomeFlow({
   subscribed = false,
   justSubscribed = false,
   planName = null,
+  paymentPastDue = false,
   initialPhase,
 }: {
   sheetUrl: string | null;
@@ -41,11 +42,13 @@ export default function HomeFlow({
   subscribed?: boolean;
   justSubscribed?: boolean;
   planName?: string | null;
+  paymentPastDue?: boolean;
   initialPhase?: Phase;
 }) {
   const [phase, setPhase] = useState<Phase>(initialPhase ?? { name: "home" });
   const [usage, setUsage] = useState<Usage>(initialUsage);
   const [showSubBanner, setShowSubBanner] = useState(justSubscribed);
+  const [truncated, setTruncated] = useState(false);
   // Which card's Value field was edited last — anchors the "apply to all
   // cards" suggestion chip.
   const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
@@ -71,6 +74,14 @@ export default function HomeFlow({
         );
         return;
       }
+      if (data?.error === "image_too_large") {
+        setPhase({
+          name: "error",
+          message:
+            "That photo is too large to process. Tip: use Take Photo (it shrinks the image for you), or take a screenshot of the picture and upload the screenshot — screenshots are much smaller.",
+        });
+        return;
+      }
       if (!res.ok) {
         setPhase({
           name: "error",
@@ -89,6 +100,7 @@ export default function HomeFlow({
         });
         return;
       }
+      setTruncated(Boolean(data.truncated));
       setLastValueEdit(null);
       setPhase({ name: "review", cards: data.cards });
     } catch {
@@ -346,6 +358,12 @@ export default function HomeFlow({
         <p className="text-sm opacity-70">
           Check each field against the card, then save.
         </p>
+        {truncated && (
+          <p className="rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            We captured the first 10 cards from this photo. Snap any extras
+            in a separate photo.
+          </p>
+        )}
         {phase.attempted && missingValue.some(Boolean) && (
           <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
             Enter a value for every card before saving.
@@ -453,6 +471,22 @@ export default function HomeFlow({
         <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
           {phase.message}
         </p>
+      )}
+      {paymentPastDue && (
+        <div className="flex flex-col items-center gap-2 rounded-2xl bg-amber-100 px-4 py-4 text-center dark:bg-amber-950">
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+            ⚠️ Your last payment didn&apos;t go through
+          </p>
+          <p className="text-xs text-amber-800 dark:text-amber-300">
+            Update your card to keep your subscription active.
+          </p>
+          <button
+            onClick={openBillingPortal}
+            className="mt-1 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition active:scale-[0.98]"
+          >
+            Update payment method
+          </button>
+        </div>
       )}
       {showSubBanner && (
         <div className="flex flex-col items-center gap-1 rounded-2xl bg-green-100 px-4 py-4 text-center dark:bg-green-950">

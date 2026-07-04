@@ -357,6 +357,7 @@ Supabase → SQL Editor:
 ```sql
 alter table public.users add column plan text;
 alter table public.users add column current_period_start timestamptz;
+alter table public.users add column payment_past_due boolean not null default false;
 
 create table public.usage_events (
   id bigint generated always as identity primary key,

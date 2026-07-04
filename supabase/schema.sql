@@ -47,3 +47,8 @@ create table public.usage_events (
 );
 create index usage_events_user_time on public.usage_events (user_id, created_at);
 alter table public.usage_events enable row level security;
+
+-- Payment recovery: true while a renewal is failing but within Stripe's
+-- retry window (past_due). Drives the in-app "update your card" banner;
+-- access continues until Stripe finally cancels.
+alter table public.users add column payment_past_due boolean not null default false;

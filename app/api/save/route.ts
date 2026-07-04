@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ensureSpreadsheet } from "@/lib/provisioning";
 import { appendRow } from "@/lib/google";
+import { MAX_CARDS_PER_UPLOAD } from "@/lib/access";
 
-const MAX_CARDS = 25;
 const MAX_FIELD_LENGTH = 200;
 
 // Writes approved cards to the user's spreadsheet, one append per card.
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!Array.isArray(body?.cards) || body.cards.length === 0) {
     return NextResponse.json({ error: "No cards received" }, { status: 400 });
   }
-  if (body.cards.length > MAX_CARDS) {
+  if (body.cards.length > MAX_CARDS_PER_UPLOAD) {
     return NextResponse.json({ error: "Too many cards" }, { status: 400 });
   }
 

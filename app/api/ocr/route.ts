@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { extractCardsFromImage } from "@/lib/gemini";
-import { TRIAL_UPLOAD_LIMIT } from "@/lib/access";
+import { MAX_CARDS_PER_UPLOAD, TRIAL_UPLOAD_LIMIT } from "@/lib/access";
 import { getAllowance, recordUpload } from "@/lib/usage";
 
 // Accepts one photo, runs OCR, and returns the extracted gift cards.
@@ -43,7 +43,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No image received" }, { status: 400 });
   }
   if (image.size > 15 * 1024 * 1024) {
-    return NextResponse.json({ error: "Image is too large" }, { status: 400 });
+    // Specific code so the client can show downscaling guidance.
+    return NextResponse.json({ error: "image_too_large" }, { status: 400 });
   }
 
   let cards;
@@ -56,6 +57,13 @@ export async function POST(request: Request) {
       { error: "Could not read the image. Please try again." },
       { status: 502 }
     );
+  }
+
+  // Cap the batch; extras are dropped with a note so a huge photo never
+  // fails the whole upload.
+  const truncated = cards.length > MAX_CARDS_PER_UPLOAD;
+  if (truncated) {
+    cards = cards.slice(0, MAX_CARDS_PER_UPLOAD);
   }
 
   // Record the successful upload (all tiers — this is also the usage
@@ -89,5 +97,5 @@ export async function POST(request: Request) {
         }
       : null;
 
-  return NextResponse.json({ cards, usage });
+  return NextResponse.json({ cards, usage, truncated });
 }
