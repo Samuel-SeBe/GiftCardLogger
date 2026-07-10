@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { extractCardsFromImage } from "@/lib/gemini";
 import { MAX_CARDS_PER_UPLOAD, TRIAL_UPLOAD_LIMIT } from "@/lib/access";
 import { getAllowance, recordUpload } from "@/lib/usage";
+import { syncSubscriptionFromStripe } from "@/lib/subscription-sync";
+
+const ACCOUNT_COLUMNS =
+  "trial_uploads_used, subscription_status, plan, current_period_start";
 
 // Accepts one photo, runs OCR, and returns the extracted gift cards.
 // The image lives only in memory for the duration of this request — it is
@@ -19,22 +23,39 @@ export async function POST(request: Request) {
 
   // Enforce trial and plan limits before doing any work.
   const admin = createAdminClient();
-  const { data: row, error: rowError } = await admin
-    .from("users")
-    .select(
-      "trial_uploads_used, subscription_status, plan, current_period_start"
-    )
-    .eq("id", user.id)
-    .single();
-  if (rowError || !row) {
+  const load = () =>
+    admin.from("users").select(ACCOUNT_COLUMNS).eq("id", user.id).single();
+
+  const first = await load();
+  let row = first.data;
+  if (first.error || !row) {
     return NextResponse.json(
       { error: "Could not load your account. Please try again." },
       { status: 500 }
     );
   }
-  const allowance = await getAllowance({ id: user.id, ...row });
+  let allowance = await getAllowance({ id: user.id, ...row });
+
+  // Reconcile-on-block: before turning anyone away, double-check against
+  // Stripe directly. This guarantees a real paying customer is never
+  // wrongly blocked by a stale local status (e.g. a missed webhook), and
+  // costs a Stripe call only on the rare block path.
   if (!allowance.allowed) {
-    return NextResponse.json({ error: allowance.reason }, { status: 402 });
+    try {
+      await syncSubscriptionFromStripe(user.id);
+      ({ data: row } = await load());
+      if (row) {
+        allowance = await getAllowance({ id: user.id, ...row });
+      }
+    } catch (e) {
+      console.error("Reconcile-on-block failed:", e);
+    }
+  }
+  if (!row || !allowance.allowed) {
+    return NextResponse.json(
+      { error: allowance.reason ?? "trial_expired" },
+      { status: 402 }
+    );
   }
 
   const form = await request.formData();
