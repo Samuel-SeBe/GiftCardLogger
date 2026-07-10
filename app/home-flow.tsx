@@ -31,6 +31,7 @@ export default function HomeFlow({
   sheetJustCreated,
   initialUsage,
   subscribed = false,
+  complimentary = false,
   justSubscribed = false,
   planName = null,
   paymentPastDue = false,
@@ -40,6 +41,7 @@ export default function HomeFlow({
   sheetJustCreated: boolean;
   initialUsage: Usage;
   subscribed?: boolean;
+  complimentary?: boolean;
   justSubscribed?: boolean;
   planName?: string | null;
   paymentPastDue?: boolean;
@@ -533,6 +535,12 @@ export default function HomeFlow({
         </p>
       )}
 
+      {/* Instruction */}
+      <p className="text-center text-sm text-slate-600">
+        Take a photo of one or more gift cards with the card number and PIN
+        clearly visible.
+      </p>
+
       {/* Primary actions */}
       <button
         onClick={() => cameraInput.current?.click()}
@@ -600,7 +608,17 @@ export default function HomeFlow({
         </Link>
 
         {/* Plan */}
-        {subscribed ? (
+        {complimentary ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="text-[13px] font-extrabold">Plan</div>
+            <div className="mt-1 text-xs font-semibold text-green-600">
+              Complimentary
+            </div>
+            <div className="mt-1 text-[11px] font-semibold text-slate-400">
+              Unlimited access
+            </div>
+          </div>
+        ) : subscribed ? (
           <button
             onClick={openBillingPortal}
             className="rounded-2xl border border-slate-200 bg-white p-4 text-left"

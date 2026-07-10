@@ -83,9 +83,12 @@ export default async function HomePage({
     }
   }
 
-  const subscribed = row?.subscription_status === "active";
+  const status = row?.subscription_status ?? "trial";
+  const subscribed = status === "active";
+  const complimentary = status === "complimentary";
   const planName =
     subscribed && isPlanId(row?.plan) ? PLANS[row.plan].name : null;
+  const headerBadge = planName ?? (complimentary ? "Complimentary" : null);
   const paymentPastDue = subscribed && row?.payment_past_due === true;
 
   return (
@@ -93,9 +96,9 @@ export default async function HomePage({
       <header className="flex items-center justify-center gap-2.5 p-4">
         <Logo size={40} />
         <span className="text-lg font-bold">Gift Card Snapper</span>
-        {planName && (
-          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-            {planName}
+        {headerBadge && (
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+            {headerBadge}
           </span>
         )}
       </header>
@@ -105,6 +108,7 @@ export default async function HomePage({
           sheetJustCreated={sheetJustCreated}
           initialUsage={usage}
           subscribed={subscribed}
+          complimentary={complimentary}
           justSubscribed={returnedFromBilling && subscribed}
           planName={planName}
           paymentPastDue={paymentPastDue}
