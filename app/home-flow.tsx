@@ -464,20 +464,31 @@ export default function HomeFlow({
     );
   }
 
+  const usageLabel = usage
+    ? usage.kind === "trial"
+      ? `${usage.used} / ${usage.limit}`
+      : `${usage.used} / ${usage.limit}`
+    : null;
+  const usagePct =
+    usage && usage.limit > 0
+      ? Math.min(100, Math.round((usage.used / usage.limit) * 100))
+      : 0;
+
   return (
-    <div className="flex w-full max-w-xs flex-col gap-4">
+    <div className="flex w-full max-w-sm flex-col gap-3.5">
       {fileInputs}
+
       {phase.name === "error" && (
-        <p className="rounded-lg bg-red-100 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <p className="rounded-xl bg-red-100 px-4 py-3 text-sm text-red-800">
           {phase.message}
         </p>
       )}
       {paymentPastDue && (
-        <div className="flex flex-col items-center gap-2 rounded-2xl bg-amber-100 px-4 py-4 text-center dark:bg-amber-950">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+        <div className="flex flex-col items-center gap-2 rounded-2xl bg-amber-100 px-4 py-4 text-center">
+          <p className="text-sm font-semibold text-amber-900">
             ⚠️ Your last payment didn&apos;t go through
           </p>
-          <p className="text-xs text-amber-800 dark:text-amber-300">
+          <p className="text-xs text-amber-800">
             Update your card to keep your subscription active.
           </p>
           <button
@@ -489,83 +500,136 @@ export default function HomeFlow({
         </div>
       )}
       {showSubBanner && (
-        <div className="flex flex-col items-center gap-1 rounded-2xl bg-green-100 px-4 py-4 text-center dark:bg-green-950">
+        <div className="flex flex-col items-center gap-1 rounded-2xl bg-green-100 px-4 py-4 text-center">
           <span className="text-2xl" aria-hidden="true">
             🎉
           </span>
-          <p className="font-semibold text-green-900 dark:text-green-200">
+          <p className="font-semibold text-green-900">
             {planName ? `You're on the ${planName} plan!` : "You're subscribed!"}
           </p>
-          <p className="text-xs text-green-800 opacity-80 dark:text-green-300">
+          <p className="text-xs text-green-800 opacity-80">
             Snap away — your uploads are unlocked.
           </p>
           <button
             onClick={() => setShowSubBanner(false)}
-            className="mt-1 text-xs text-green-800 underline opacity-70 dark:text-green-300"
+            className="mt-1 text-xs text-green-800 underline opacity-70"
           >
             Dismiss
           </button>
         </div>
       )}
       {sheetJustCreated && sheetUrl && (
-        <p className="rounded-lg bg-green-100 px-4 py-3 text-center text-sm text-green-900 dark:bg-green-950 dark:text-green-200">
+        <p className="rounded-xl bg-green-100 px-4 py-3 text-center text-sm text-green-900">
           We created{" "}
           <a
             href={sheetUrl}
             target="_blank"
             rel="noreferrer"
-            className="font-medium underline"
+            className="font-semibold underline"
           >
             Gift Card Inventory
           </a>{" "}
-          in your Google Drive — every card you save lands there.
+          in your Google Drive.
         </p>
       )}
-      <p className="text-center text-sm opacity-70">
-        Lay out your gift cards — one photo can capture several at once.
-      </p>
+
+      {/* Primary actions */}
       <button
         onClick={() => cameraInput.current?.click()}
-        className="w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
+        className="w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.3)] transition active:scale-[0.98]"
       >
-        Take Photo
+        📷 Take Photo
       </button>
       <button
         onClick={() => libraryInput.current?.click()}
-        className="w-full rounded-2xl border border-black/15 px-6 py-4 text-base font-medium transition active:scale-[0.98] dark:border-white/20"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-900 transition active:scale-[0.98]"
       >
         Choose Existing Photo
       </button>
-      <p className="text-center text-xs opacity-50">
-        Photos and card details are never stored — they go only to your
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Usage */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="text-[13px] font-extrabold">Usage</div>
+          {usage ? (
+            <>
+              <div className="mt-1 text-xs font-semibold text-slate-500">
+                {usage.kind === "trial" ? "Free trial" : "This month"} ·{" "}
+                {usageLabel}
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-blue-600"
+                  style={{ width: `${usagePct}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="mt-1 text-xs font-semibold text-green-600">
+              Unlimited ✓
+            </div>
+          )}
+        </div>
+
+        {/* Your Sheet */}
+        <a
+          href={sheetUrl ?? "#"}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-2xl border border-slate-200 bg-white p-4"
+        >
+          <div className="text-[13px] font-extrabold">Your Sheet</div>
+          <div className="mt-1 text-xs font-semibold text-blue-600">
+            Open in Sheets ▸
+          </div>
+          <div className="mt-2 text-[11px] font-semibold text-slate-400">
+            Gift Card Inventory
+          </div>
+        </a>
+
+        {/* Refer */}
+        <Link
+          href="/referral"
+          className="rounded-2xl border border-slate-200 bg-white p-4"
+        >
+          <div className="text-[13px] font-extrabold">Refer a friend</div>
+          <div className="mt-1 text-xs font-semibold text-green-600">
+            Earn free months
+          </div>
+        </Link>
+
+        {/* Plan */}
+        {subscribed ? (
+          <button
+            onClick={openBillingPortal}
+            className="rounded-2xl border border-slate-200 bg-white p-4 text-left"
+          >
+            <div className="text-[13px] font-extrabold">Plan</div>
+            <div className="mt-1 text-xs font-semibold text-slate-500">
+              {planName ?? "Active"} · Manage ▸
+            </div>
+          </button>
+        ) : (
+          <Link
+            href="/subscribe"
+            className="rounded-2xl border border-slate-200 bg-white p-4"
+          >
+            <div className="text-[13px] font-extrabold">Plan</div>
+            <div className="mt-1 text-xs font-semibold text-blue-600">
+              Free trial · Upgrade ▸
+            </div>
+          </Link>
+        )}
+      </div>
+
+      <p className="mt-1 text-center text-xs text-slate-400">
+        Photos &amp; card details are never stored — they go only to your
         sheet.
       </p>
-      {usage && !(subscribed && usage.kind === "trial") && (
-        <p className="text-center text-xs opacity-60">
-          {usage.kind === "trial"
-            ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
-            : `This billing month: ${usage.used} of ${usage.limit} uploads used`}
-        </p>
-      )}
-      <Link
-        href="/referral"
-        className="mt-6 text-center text-sm font-medium text-blue-600 underline dark:text-blue-400"
-      >
-        Refer a friend — earn free months
-      </Link>
-      {subscribed && (
-        <button
-          onClick={openBillingPortal}
-          className="text-center text-xs opacity-50 underline"
-        >
-          Manage subscription
-        </button>
-      )}
-
-      {/* Temporary while building: lets us test with multiple accounts. */}
       <button
         onClick={signOut}
-        className="mt-8 text-center text-xs opacity-50 underline"
+        className="mt-2 text-center text-xs text-slate-400 underline"
       >
         Sign out
       </button>

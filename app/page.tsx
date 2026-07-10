@@ -6,6 +6,7 @@ import { getAllowance } from "@/lib/usage";
 import { syncSubscriptionFromStripe } from "@/lib/subscription-sync";
 import { PLANS, isPlanId } from "@/lib/plans";
 import HomeFlow from "./home-flow";
+import Landing from "./landing";
 import { Logo } from "@/components/logo";
 
 // Home screen: exactly one primary action (Take Photo) and one secondary
@@ -23,8 +24,9 @@ export default async function HomePage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Signed-out visitors see the marketing landing page, not a redirect.
   if (!user) {
-    redirect("/login");
+    return <Landing />;
   }
 
   // First visit: create the user's "Gift Card Inventory" spreadsheet.
