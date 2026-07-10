@@ -66,11 +66,16 @@ export default async function HomePage({
     }
   }
 
-  const { data: row } = await admin
+  const { data: row, error: rowError } = await admin
     .from("users")
     .select(columns)
     .eq("id", user.id)
     .single();
+  if (rowError) {
+    // Most commonly a missing column (a DB migration wasn't run), which
+    // would otherwise silently degrade the dashboard to a wrong state.
+    console.error("Failed to load account row:", rowError.message);
+  }
 
   // Usage counter: trial progress for trial users, this-billing-month
   // progress for limited plans, nothing for unlimited/free-pass users.
