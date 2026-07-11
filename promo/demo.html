@@ -79,6 +79,8 @@
   .gc.amazon .val { color: #ff9900; }
   .gc.bestbuy { background: #ffe000; color: #001e73; }
   .gc.homedepot { background: #f96302; color: #fff; }
+  .gc.visa { background: #1a1f71; color: #fff; }
+  .gc.visa .val { color: #f7b600; }
   .r1 { transform: rotate(-2.5deg); } .r2 { transform: rotate(2deg); }
   .r3 { transform: rotate(1.5deg); } .r4 { transform: rotate(-1.5deg); }
   .r5 { transform: rotate(2.5deg); } .r6 { transform: rotate(-2deg); }
@@ -176,6 +178,7 @@
   .outro-logo { font-size: 56px; }
   .outro-name { font-size: 48px; font-weight: 900; color: #fff; letter-spacing: -1px; }
   .outro-tag { font-size: 23px; color: #bfdbfe; font-weight: 500; }
+  .outro-networks { font-size: 18px; color: #fbbf24; font-weight: 600; margin-top: 6px; }
   .outro-url { font-size: 19px; color: #93c5fd; margin-top: 10px; }
 
   .caption {
@@ -224,10 +227,10 @@
           <div class="num">K7PW-3XQZT2-M9L4</div>
           <div class="foot"><span>Gift Card</span><span class="val">$25</span></div>
         </div>
-        <div class="gc bestbuy r5">
-          <div class="name">BEST BUY</div>
-          <div class="num">6050 9911 2233 4455</div>
-          <div class="foot"><span>PIN 8802</span><span>$75</span></div>
+        <div class="gc visa r5">
+          <div class="name">VISA</div>
+          <div class="num">4941 6017 9480 4285</div>
+          <div class="foot"><span>Gift Card</span><span class="val">$75</span></div>
         </div>
         <div class="gc homedepot r6">
           <div class="name">THE HOME DEPOT</div>
@@ -252,7 +255,7 @@
       <div class="rcard" id="rc2"><div><div class="v">Best Buy</div><div class="n">6050 1234 5678 9012</div></div><div class="val">25.00</div></div>
       <div class="rcard" id="rc3"><div><div class="v">Home Depot</div><div class="n">9876 5432 1098 7654</div></div><div class="val">100.00</div></div>
       <div class="rcard" id="rc4"><div><div class="v">Amazon</div><div class="n">K7PW-3XQZT2-M9L4</div></div><div class="val">25.00</div></div>
-      <div class="rcard" id="rc5"><div><div class="v">Best Buy</div><div class="n">6050 9911 2233 4455</div></div><div class="val">75.00</div></div>
+      <div class="rcard" id="rc5"><div><div class="v">Visa</div><div class="n">4941 6017 9480 4285</div></div><div class="val">75.00</div></div>
       <div class="rcard" id="rc6"><div><div class="v">Home Depot</div><div class="n">9876 1122 3344 5566</div></div><div class="val">50.00</div></div>
       <div class="btn-primary approve" id="approveBtn" style="font-size:17px; padding:16px;">Approve &amp; Save
         <div class="tap" id="tap3" style="right:18px; top:6px;"></div>
@@ -295,7 +298,7 @@
       <tr class="newrow" id="nr2"><td class="rowno">3</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Best Buy</span></td><td><span class="cellv">6050 1234 5678 9012</span></td><td><span class="cellv">4471</span></td><td><span class="cellv">25.00</span></td></tr>
       <tr class="newrow" id="nr3"><td class="rowno">4</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Home Depot</span></td><td><span class="cellv">9876 5432 1098 7654</span></td><td><span class="cellv">9871</span></td><td><span class="cellv">100.00</span></td></tr>
       <tr class="newrow" id="nr4"><td class="rowno">5</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Amazon</span></td><td><span class="cellv">K7PW-3XQZT2-M9L4</span></td><td><span class="cellv"></span></td><td><span class="cellv">25.00</span></td></tr>
-      <tr class="newrow" id="nr5"><td class="rowno">6</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Best Buy</span></td><td><span class="cellv">6050 9911 2233 4455</span></td><td><span class="cellv">8802</span></td><td><span class="cellv">75.00</span></td></tr>
+      <tr class="newrow" id="nr5"><td class="rowno">6</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Visa</span></td><td><span class="cellv">4941 6017 9480 4285</span></td><td><span class="cellv"></span></td><td><span class="cellv">75.00</span></td></tr>
       <tr class="newrow" id="nr6"><td class="rowno">7</td><td><span class="cellv">07/03/2026</span></td><td><span class="cellv">Home Depot</span></td><td><span class="cellv">9876 1122 3344 5566</span></td><td><span class="cellv">2214</span></td><td><span class="cellv">50.00</span></td></tr>
       <tr><td class="rowno">8</td><td></td><td></td><td></td><td></td><td></td></tr>
       <tr><td class="rowno">9</td><td></td><td></td><td></td><td></td><td></td></tr>
@@ -305,20 +308,24 @@
   <p class="caption" id="caption"></p>
 
   <div id="intro">
-    <div class="outro-logo"><svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
-      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+    <div class="outro-logo"><svg width="104" height="104" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="gcs-intro" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
       </linearGradient></defs>
-      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#lg1)"/>
-      <g transform="rotate(-6 28 30)">
-        <rect x="9" y="17" width="37" height="25" rx="4" fill="#ffffff"/>
-        <rect x="9" y="23" width="37" height="5" fill="#93c5fd"/>
-        <rect x="13" y="33" width="14" height="3" rx="1.5" fill="#cbd5e1"/>
+      <rect width="64" height="64" rx="15" fill="url(#gcs-intro)"/>
+      <rect x="16" y="5" width="32" height="54" rx="6" fill="#0b1220"/>
+      <rect x="29" y="6.2" width="6" height="1" rx="0.5" fill="#33415c"/>
+      <rect x="17.6" y="8" width="28.8" height="40.5" rx="3" fill="#a97a49"/>
+      <g transform="rotate(-3 32 21)">
+        <rect x="20.4" y="12.6" width="24" height="18" rx="2" fill="#0b1e52" opacity="0.22"/>
+        <rect x="20" y="12" width="24" height="18" rx="2" fill="#2563eb"/>
+        <rect x="20" y="12" width="24" height="4.3" fill="#1e40af"/>
+        <text x="32" y="20.2" font-family="Arial, sans-serif" font-weight="800" font-size="3.5" fill="#ffffff" text-anchor="middle">GIFT CARD</text>
+        <text x="32" y="26.6" font-family="monospace" font-weight="700" font-size="3" fill="#dbeafe" text-anchor="middle">1234 5678</text>
+        <path d="M40.4 13 l0.8 1.6 1.6 0.8 -1.6 0.8 -0.8 1.6 -0.8 -1.6 -1.6 -0.8 1.6 -0.8 z" fill="#fde047"/>
       </g>
-      <circle cx="44" cy="43" r="11.5" fill="#1e3a8a"/>
-      <circle cx="44" cy="43" r="7.5" fill="none" stroke="#ffffff" stroke-width="2.5"/>
-      <circle cx="47" cy="40" r="2" fill="#ffffff" opacity="0.9"/>
-      <path d="M51 9 l2.3 4.6 4.6 2.3 -4.6 2.3 -2.3 4.6 -2.3 -4.6 -4.6 -2.3 4.6 -2.3 z" fill="#fde047"/>
+      <circle cx="32" cy="53.5" r="4" fill="none" stroke="#ffffff" stroke-width="1.3"/>
+      <circle cx="32" cy="53.5" r="2.8" fill="#ef4444"/>
     </svg></div>
     <div class="outro-name">Gift Card Snapper</div>
     <div class="outro-tag">Snap your gift cards. Get rows in Google Sheets.</div>
@@ -326,23 +333,28 @@
   </div>
 
   <div id="outro">
-    <div class="outro-logo"><svg width="88" height="88" viewBox="0 0 64 64" aria-hidden="true">
-      <defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
+    <div class="outro-logo"><svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="gcs-outro" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
       </linearGradient></defs>
-      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#lg2)"/>
-      <g transform="rotate(-6 28 30)">
-        <rect x="9" y="17" width="37" height="25" rx="4" fill="#ffffff"/>
-        <rect x="9" y="23" width="37" height="5" fill="#93c5fd"/>
-        <rect x="13" y="33" width="14" height="3" rx="1.5" fill="#cbd5e1"/>
+      <rect width="64" height="64" rx="15" fill="url(#gcs-outro)"/>
+      <rect x="16" y="5" width="32" height="54" rx="6" fill="#0b1220"/>
+      <rect x="29" y="6.2" width="6" height="1" rx="0.5" fill="#33415c"/>
+      <rect x="17.6" y="8" width="28.8" height="40.5" rx="3" fill="#a97a49"/>
+      <g transform="rotate(-3 32 21)">
+        <rect x="20.4" y="12.6" width="24" height="18" rx="2" fill="#0b1e52" opacity="0.22"/>
+        <rect x="20" y="12" width="24" height="18" rx="2" fill="#2563eb"/>
+        <rect x="20" y="12" width="24" height="4.3" fill="#1e40af"/>
+        <text x="32" y="20.2" font-family="Arial, sans-serif" font-weight="800" font-size="3.5" fill="#ffffff" text-anchor="middle">GIFT CARD</text>
+        <text x="32" y="26.6" font-family="monospace" font-weight="700" font-size="3" fill="#dbeafe" text-anchor="middle">1234 5678</text>
+        <path d="M40.4 13 l0.8 1.6 1.6 0.8 -1.6 0.8 -0.8 1.6 -0.8 -1.6 -1.6 -0.8 1.6 -0.8 z" fill="#fde047"/>
       </g>
-      <circle cx="44" cy="43" r="11.5" fill="#1e3a8a"/>
-      <circle cx="44" cy="43" r="7.5" fill="none" stroke="#ffffff" stroke-width="2.5"/>
-      <circle cx="47" cy="40" r="2" fill="#ffffff" opacity="0.9"/>
-      <path d="M51 9 l2.3 4.6 4.6 2.3 -4.6 2.3 -2.3 4.6 -2.3 -4.6 -4.6 -2.3 4.6 -2.3 z" fill="#fde047"/>
+      <circle cx="32" cy="53.5" r="4" fill="none" stroke="#ffffff" stroke-width="1.3"/>
+      <circle cx="32" cy="53.5" r="2.8" fill="#ef4444"/>
     </svg></div>
     <div class="outro-name">Gift Card Snapper</div>
-    <div class="outro-tag">Snaps up to 6 cards at once and loads them<br>directly into a Google Sheet.</div>
+    <div class="outro-tag">Snaps up to 10 cards at once and loads them<br>directly into a Google Sheet.</div>
+    <div class="outro-networks">Visa, Mastercard &amp; virtually any store-branded gift card.</div>
     <div class="outro-url">giftcardsnapper.com</div>
   </div>
 
@@ -364,30 +376,31 @@
     setTimeout(() => r.classList.remove("flash"), 80);
   }
   const steps = [
-    [2600,  () => $("intro").classList.add("off")],
-    [3100,  () => caption("Log gift cards straight to Google Sheets.")],
-    [5000,  () => $("tap1").classList.add("go")],
-    [5700,  () => { show("camera"); caption('Scan <span class="hi">1 — or up to 6</span> cards in one photo.'); }],
-    [9200,  () => $("tap2").classList.add("go")],
-    [9700,  () => $("flash").classList.add("go")],
-    [10100, () => { show("processing"); caption("AI reads every card — automatically."); }],
-    [12800, () => { show("review"); caption("All 6 cards on one screen. Confirm and save."); }],
-    [13000, () => $("rc1").classList.add("in")],
-    [13300, () => $("rc2").classList.add("in")],
-    [13600, () => $("rc3").classList.add("in")],
-    [13900, () => $("rc4").classList.add("in")],
-    [14200, () => $("rc5").classList.add("in")],
-    [14500, () => $("rc6").classList.add("in")],
-    [17000, () => $("tap3").classList.add("go")],
-    [17600, () => show("saving")],
-    [18500, () => { show("success"); caption("6 rows land in your Google Sheet."); }],
-    [18800, () => landRow("nr1")],
-    [19400, () => landRow("nr2")],
-    [20000, () => landRow("nr3")],
-    [20600, () => landRow("nr4")],
-    [21200, () => landRow("nr5")],
-    [21800, () => landRow("nr6")],
-    [24000, () => $("outro").classList.add("on")],
+    [2000,  () => $("intro").classList.add("off")],
+    [2500,  () => caption("Log gift cards straight to Google Sheets.")],
+    [4000,  () => $("tap1").classList.add("go")],
+    [4600,  () => { show("camera"); caption('Scan <span class="hi">1 — or up to 10</span> cards in one photo.'); }],
+    [6600,  () => caption('Works with <span class="hi">Visa, Mastercard</span> &amp; any store gift card.')],
+    [8400,  () => $("tap2").classList.add("go")],
+    [8900,  () => $("flash").classList.add("go")],
+    [9300,  () => { show("processing"); caption("AI reads every card — automatically."); }],
+    [11500, () => { show("review"); caption("All 6 cards on one screen. Confirm and save."); }],
+    [11700, () => $("rc1").classList.add("in")],
+    [11950, () => $("rc2").classList.add("in")],
+    [12200, () => $("rc3").classList.add("in")],
+    [12450, () => $("rc4").classList.add("in")],
+    [12700, () => $("rc5").classList.add("in")],
+    [12950, () => $("rc6").classList.add("in")],
+    [15000, () => $("tap3").classList.add("go")],
+    [15600, () => show("saving")],
+    [16400, () => { show("success"); caption("6 rows land in your Google Sheet."); }],
+    [16700, () => landRow("nr1")],
+    [17120, () => landRow("nr2")],
+    [17540, () => landRow("nr3")],
+    [17960, () => landRow("nr4")],
+    [18380, () => landRow("nr5")],
+    [18800, () => landRow("nr6")],
+    [20600, () => $("outro").classList.add("on")],
   ];
   steps.forEach(([t, fn]) => setTimeout(fn, t));
 </script>
