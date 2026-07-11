@@ -63,8 +63,11 @@ Write each saved card to both the reseller's sheet and the broker's sheet.
 
 ## Tech debt / polish
 
-- **Demo video** (`public/demo.mp4`) still shows the old camera-lens logo —
-  re-render with the current logo.
+- **Demo video** — the landing-page demo link was removed (video wasn't
+  working and shows the old camera-lens logo). Re-render with the current logo
+  and re-add the link when it's ready. The `DemoModal` component
+  (`app/demo-modal.tsx`) and `public/demo.mp4` remain in the repo, just
+  unlinked.
 - **Accessibility lows** deferred from the audit:
   - Heading hierarchy (avoid multiple `h1`s per view).
   - Replace `alert()` calls with in-app toasts.

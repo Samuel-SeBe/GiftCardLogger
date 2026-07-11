@@ -4,7 +4,6 @@ import { Logo } from "@/components/logo";
 import { SupportLink } from "@/components/ui";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { priceIdFor, type PlanId } from "@/lib/plans";
-import DemoModal from "./demo-modal";
 
 // Public marketing page shown to signed-out visitors at the root.
 // Mobile-first; scales up with a centered max-width column.
@@ -111,9 +110,8 @@ export default async function Landing() {
           its details, then adds every row to your Google Sheet all at once.
           Works for Visa, Mastercard, and virtually any store gift card.
         </p>
-        <div className="mt-6 flex flex-col items-center gap-2.5">
+        <div className="mt-6 flex flex-col items-center">
           <CtaButton />
-          <DemoModal label="Watch 30s demo ▸" />
         </div>
         <TrustLine />
 
@@ -239,24 +237,6 @@ export default async function Landing() {
         </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className="bg-gradient-to-br from-blue-700 to-blue-600 px-5 py-9 text-center text-white">
-        <div className="mx-auto w-full max-w-md">
-          <h2 className="text-2xl font-extrabold tracking-tight">
-            Clear your backlog today
-          </h2>
-          <p className="mb-5 mt-2.5 text-[15px] opacity-90">
-            Log your first cards free in under a minute.
-          </p>
-          <Link
-            href="/login"
-            className="block rounded-xl bg-white py-4 text-base font-extrabold text-blue-600"
-          >
-            Start free trial
-          </Link>
-        </div>
-      </section>
-
       <footer className="border-t border-slate-100 px-5 py-5 text-center text-xs font-semibold text-slate-500">
         <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
           <span>Gift Card Snapper</span>
@@ -281,9 +261,12 @@ function CtaButton() {
   return (
     <Link
       href="/login"
-      className="rounded-2xl bg-blue-600 px-6 py-4 text-base font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)] transition active:scale-[0.99]"
+      className="flex flex-col items-center rounded-2xl bg-blue-600 px-6 py-4 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)] transition active:scale-[0.99]"
     >
-      Start free trial
+      <span className="text-base font-bold">Start free trial</span>
+      <span className="text-xs font-semibold text-white/80">
+        No credit card required
+      </span>
     </Link>
   );
 }
