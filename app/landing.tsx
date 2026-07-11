@@ -40,20 +40,18 @@ const STEPS = [
   { n: "3", title: "Save", body: "Tap once; every row appears in your Sheet." },
 ];
 
+// Free trial first, then the paid tiers. Tiers with a `plan` get their
+// price from Stripe; the free trial shows a fixed "Free" label.
 const TIERS: {
-  plan: PlanId;
+  plan?: PlanId;
   name: string;
   detail: string;
-  popular: boolean;
+  priceLabel?: string;
 }[] = [
-  { plan: "basic", name: "Basic", detail: "50 snaps / month", popular: false },
-  { plan: "pro", name: "Pro", detail: "250 snaps / month", popular: true },
-  {
-    plan: "unlimited",
-    name: "Unlimited",
-    detail: "Unlimited snaps",
-    popular: false,
-  },
+  { name: "Free trial", detail: "5 snaps to start", priceLabel: "Free" },
+  { plan: "basic", name: "Basic", detail: "50 snaps / month" },
+  { plan: "pro", name: "Pro", detail: "250 snaps / month" },
+  { plan: "unlimited", name: "Unlimited", detail: "Unlimited snaps" },
 ];
 
 // Look up each tier's live price from Stripe so the landing page always
@@ -66,8 +64,11 @@ const loadPrices = unstable_cache(
     if (!stripeConfigured()) return prices;
     try {
       const stripe = getStripe();
+      const paidPlans = TIERS.map((t) => t.plan).filter(
+        (p): p is PlanId => Boolean(p)
+      );
       await Promise.all(
-        TIERS.map(async ({ plan }) => {
+        paidPlans.map(async (plan) => {
           const price = await stripe.prices.retrieve(priceIdFor(plan));
           if (price.unit_amount) {
             prices[plan] = `$${(price.unit_amount / 100).toFixed(2)}`;
@@ -196,48 +197,43 @@ export default async function Landing() {
           <p className="mb-5 mt-1.5 text-center text-sm text-slate-600">
             Start with a free trial. Upgrade whenever you&apos;re ready.
           </p>
-          <div className="flex flex-col gap-3.5">
-            {TIERS.map((t) => (
-              <div
-                key={t.name}
-                className={`relative rounded-2xl bg-white p-5 ${
-                  t.popular
-                    ? "border-2 border-blue-600"
-                    : "border border-slate-200"
-                }`}
-              >
-                {t.popular && (
-                  <span className="absolute -top-2.5 left-5 rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white">
-                    MOST POPULAR
-                  </span>
-                )}
-                <div className="flex items-baseline justify-between">
-                  <span className="text-lg font-extrabold">{t.name}</span>
-                  {prices[t.plan] && (
-                    <span className="text-lg font-extrabold">
-                      {prices[t.plan]}
-                      <span className="text-xs font-semibold text-slate-500">
-                        /mo
-                      </span>
+          <div className="flex flex-col gap-2.5">
+            {TIERS.map((t) => {
+              const price = t.plan ? prices[t.plan] : t.priceLabel;
+              return (
+                <div
+                  key={t.name}
+                  className="flex items-baseline justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
+                >
+                  <div className="text-left">
+                    <div className="text-base font-extrabold">{t.name}</div>
+                    <div className="mt-0.5 text-sm font-semibold text-slate-500">
+                      {t.detail}
+                    </div>
+                  </div>
+                  {price && (
+                    <span className="whitespace-nowrap text-lg font-extrabold">
+                      {price}
+                      {t.plan && (
+                        <span className="text-xs font-semibold text-slate-500">
+                          /mo
+                        </span>
+                      )}
                     </span>
                   )}
                 </div>
-                <div className="mt-1 text-sm font-semibold text-slate-500">
-                  {t.detail}
-                </div>
-                <Link
-                  href="/login"
-                  className={`mt-3.5 block rounded-xl py-3 text-center text-sm font-bold ${
-                    t.popular
-                      ? "bg-blue-600 text-white"
-                      : "bg-blue-50 text-blue-600"
-                  }`}
-                >
-                  Start free trial
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          <p className="mt-3 text-center text-xs font-semibold text-slate-500">
+            Each snap can contain up to 10 cards.
+          </p>
+          <Link
+            href="/login"
+            className="mt-4 block rounded-xl bg-blue-600 py-4 text-center text-base font-extrabold text-white"
+          >
+            Start free trial
+          </Link>
         </div>
       </section>
 

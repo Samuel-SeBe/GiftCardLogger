@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -32,7 +33,9 @@ function LoginContent() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
       <div className="flex flex-col items-center text-center">
-        <Logo size={76} />
+        <Link href="/" aria-label="Back to home">
+          <Logo size={76} />
+        </Link>
         <h1 className="mt-4 text-3xl font-bold tracking-tight">
           Gift Card Snapper
         </h1>
