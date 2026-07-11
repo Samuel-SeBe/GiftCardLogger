@@ -47,7 +47,7 @@ const TIERS: {
   name: string;
   detail: string;
 }[] = [
-  { name: "Free Trial — No credit card required", detail: "5 snaps to start" },
+  { name: "Free Trial", detail: "5 snaps to start" },
   { plan: "basic", name: "Basic", detail: "50 snaps / month" },
   { plan: "pro", name: "Pro", detail: "250 snaps / month" },
   { plan: "unlimited", name: "Unlimited", detail: "Unlimited snaps" },
@@ -204,6 +204,11 @@ export default async function Landing() {
               >
                 <div className="text-left">
                   <div className="text-base font-extrabold">{t.name}</div>
+                  {!t.plan && (
+                    <div className="text-base font-extrabold">
+                      No credit card required
+                    </div>
+                  )}
                   <div className="mt-0.5 text-sm font-semibold text-slate-500">
                     {t.detail}
                   </div>
