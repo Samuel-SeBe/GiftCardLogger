@@ -41,14 +41,13 @@ const STEPS = [
 ];
 
 // Free trial first, then the paid tiers. Tiers with a `plan` get their
-// price from Stripe; the free trial shows a fixed "Free" label.
+// price from Stripe; the free trial shows a "Start free trial" CTA instead.
 const TIERS: {
   plan?: PlanId;
   name: string;
   detail: string;
-  priceLabel?: string;
 }[] = [
-  { name: "Free trial", detail: "5 snaps to start", priceLabel: "Free" },
+  { name: "Free Trial", detail: "5 snaps to start" },
   { plan: "basic", name: "Basic", detail: "50 snaps / month" },
   { plan: "pro", name: "Pro", detail: "250 snaps / month" },
   { plan: "unlimited", name: "Unlimited", detail: "Unlimited snaps" },
@@ -198,42 +197,45 @@ export default async function Landing() {
             Start with a free trial. Upgrade whenever you&apos;re ready.
           </p>
           <div className="flex flex-col gap-2.5">
-            {TIERS.map((t) => {
-              const price = t.plan ? prices[t.plan] : t.priceLabel;
-              return (
-                <div
-                  key={t.name}
-                  className="flex items-baseline justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
-                >
-                  <div className="text-left">
-                    <div className="text-base font-extrabold">{t.name}</div>
-                    <div className="mt-0.5 text-sm font-semibold text-slate-500">
-                      {t.detail}
-                    </div>
+            {TIERS.map((t) => (
+              <div
+                key={t.name}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4"
+              >
+                <div className="text-left">
+                  <div className="text-base font-extrabold">{t.name}</div>
+                  <div className="mt-0.5 text-sm font-semibold text-slate-500">
+                    {t.detail}
                   </div>
-                  {price && (
-                    <span className="whitespace-nowrap text-lg font-extrabold">
-                      {price}
-                      {t.plan && (
-                        <span className="text-xs font-semibold text-slate-500">
-                          /mo
-                        </span>
-                      )}
-                    </span>
+                  {!t.plan && (
+                    <div className="mt-0.5 text-sm font-semibold text-slate-500">
+                      No credit card required
+                    </div>
                   )}
+                  <div className="mt-1 text-xs font-bold text-blue-600">
+                    Up to 10 cards per snap
+                  </div>
                 </div>
-              );
-            })}
+                {t.plan ? (
+                  prices[t.plan] && (
+                    <span className="whitespace-nowrap text-lg font-extrabold">
+                      {prices[t.plan]}
+                      <span className="text-xs font-semibold text-slate-500">
+                        /mo
+                      </span>
+                    </span>
+                  )
+                ) : (
+                  <Link
+                    href="/login"
+                    className="whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-extrabold text-white"
+                  >
+                    Start free trial
+                  </Link>
+                )}
+              </div>
+            ))}
           </div>
-          <p className="mt-3 text-center text-xs font-semibold text-slate-500">
-            Each snap can contain up to 10 cards.
-          </p>
-          <Link
-            href="/login"
-            className="mt-4 block rounded-xl bg-blue-600 py-4 text-center text-base font-extrabold text-white"
-          >
-            Start free trial
-          </Link>
         </div>
       </section>
 
