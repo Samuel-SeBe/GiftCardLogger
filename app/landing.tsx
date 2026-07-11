@@ -47,7 +47,7 @@ const TIERS: {
   name: string;
   detail: string;
 }[] = [
-  { name: "Free Trial", detail: "5 snaps to start" },
+  { name: "Free Trial — No credit card required", detail: "5 snaps to start" },
   { plan: "basic", name: "Basic", detail: "50 snaps / month" },
   { plan: "pro", name: "Pro", detail: "250 snaps / month" },
   { plan: "unlimited", name: "Unlimited", detail: "Unlimited snaps" },
@@ -207,11 +207,6 @@ export default async function Landing() {
                   <div className="mt-0.5 text-sm font-semibold text-slate-500">
                     {t.detail}
                   </div>
-                  {!t.plan && (
-                    <div className="mt-0.5 text-sm font-semibold text-slate-500">
-                      No credit card required
-                    </div>
-                  )}
                   <div className="mt-1 text-xs font-bold text-blue-600">
                     Up to 10 cards per snap
                   </div>
