@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { SupportLink } from "@/components/ui";
 
 type Referral = { name: string; joined: string; subscribed: boolean };
 
@@ -64,7 +65,7 @@ export default function ReferralPage() {
   return (
     <main className="flex flex-1 flex-col items-center gap-5 p-6 pt-[8vh] text-center">
       <h1 className="text-2xl font-bold">Refer a friend</h1>
-      <p className="max-w-xs text-sm opacity-70">
+      <p className="max-w-xs text-sm text-slate-600">
         Share your personal link. When a friend signs up <b>and subscribes</b>,
         you get <b>one month free</b> — credited automatically. Refer as many
         friends as you like.
@@ -154,9 +155,12 @@ export default function ReferralPage() {
         </div>
       )}
 
-      <Link href="/" className="mt-4 text-sm opacity-60 underline">
-        Back
-      </Link>
+      <div className="mt-4 flex items-center gap-4">
+        <Link href="/" className="text-sm font-medium text-slate-500 underline">
+          ← Back
+        </Link>
+        <SupportLink />
+      </div>
     </main>
   );
 }

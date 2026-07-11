@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { PLAN_IDS, PLANS, isPlanId, priceIdFor, type PlanId } from "@/lib/plans";
+import { SupportLink } from "@/components/ui";
 import SubscribeButton from "./subscribe-button";
 import UpgradeButton from "./upgrade-button";
 
@@ -123,7 +125,7 @@ export default async function SubscribePage({
           {subscribed && (
             <>
               <UpgradeButton />
-              <p className="text-xs opacity-50">
+              <p className="text-xs text-slate-500">
                 Plan changes happen in secure billing settings and prorate
                 automatically.
               </p>
@@ -133,10 +135,17 @@ export default async function SubscribePage({
       )}
 
       {configured && !subscribed && (
-        <p className="max-w-xs text-xs opacity-50">
+        <p className="max-w-xs text-xs text-slate-500">
           Cancel anytime. Payments are handled securely by Stripe.
         </p>
       )}
+
+      <div className="mt-2 flex items-center gap-4">
+        <Link href="/" className="text-sm font-medium text-slate-500 underline">
+          ← Back
+        </Link>
+        <SupportLink />
+      </div>
     </main>
   );
 }

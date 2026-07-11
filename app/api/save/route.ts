@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSpreadsheet } from "@/lib/provisioning";
 import { appendRow } from "@/lib/google";
 import { MAX_CARDS_PER_UPLOAD } from "@/lib/access";
 
 const MAX_FIELD_LENGTH = 200;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Writes approved cards to the user's spreadsheet, one append per card.
 // Each card succeeds or fails independently; the response reports both.
@@ -38,6 +41,29 @@ export async function POST(request: Request) {
     value: asField(card?.value),
     expiration: asField(card?.expiration),
   }));
+
+  // Idempotency: claim this batch id before writing. If it's already been
+  // claimed (double-submit, multi-tab, retry-after-timeout), return the
+  // saved result without appending duplicate rows.
+  const batchId = typeof body.batchId === "string" ? body.batchId : null;
+  if (batchId && UUID_RE.test(batchId)) {
+    const admin = createAdminClient();
+    const { error: claimError } = await admin
+      .from("save_batches")
+      .insert({ id: batchId, user_id: user.id });
+    if (claimError) {
+      if (claimError.code === "23505") {
+        // Already saved by a prior request — don't duplicate.
+        return NextResponse.json({
+          results: cards.map(() => ({ ok: true })),
+          duplicate: true,
+        });
+      }
+      // Any other error (e.g. table missing): log and proceed rather than
+      // block a real save on the idempotency layer.
+      console.error("Batch claim failed (continuing):", claimError.message);
+    }
+  }
 
   let provisioned;
   try {

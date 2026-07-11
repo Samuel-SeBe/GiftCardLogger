@@ -52,3 +52,13 @@ alter table public.usage_events enable row level security;
 -- retry window (past_due). Drives the in-app "update your card" banner;
 -- access continues until Stripe finally cancels.
 alter table public.users add column payment_past_due boolean not null default false;
+
+-- Save idempotency: one row per review batch. The save endpoint claims the
+-- client-generated batch id before writing, so a double-submit / multi-tab
+-- / retry can't append the same rows twice. Server-only (RLS, no policies).
+create table public.save_batches (
+  id uuid primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.save_batches enable row level security;

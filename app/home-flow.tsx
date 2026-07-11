@@ -4,6 +4,22 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { PrimaryButton, SecondaryButton, SupportLink } from "@/components/ui";
+
+// fetch with an abort timeout so a stalled network can't hang the UI.
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  ms: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 type Card = {
   vendor: string;
@@ -56,6 +72,9 @@ export default function HomeFlow({
   const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
+  // Idempotency key for the current review batch, so a double-submit or a
+  // retry-after-timeout can't append the same rows twice.
+  const batchIdRef = useRef<string | null>(null);
   const router = useRouter();
 
   async function handleFile(file: File | undefined) {
@@ -67,7 +86,11 @@ export default function HomeFlow({
       const form = new FormData();
       form.append("image", image, "photo.jpg");
 
-      const res = await fetch("/api/ocr", { method: "POST", body: form });
+      const res = await fetchWithTimeout(
+        "/api/ocr",
+        { method: "POST", body: form },
+        60000
+      );
       const data = await res.json().catch(() => null);
 
       if (res.status === 402) {
@@ -104,11 +127,15 @@ export default function HomeFlow({
       }
       setTruncated(Boolean(data.truncated));
       setLastValueEdit(null);
+      batchIdRef.current = crypto.randomUUID();
       setPhase({ name: "review", cards: data.cards });
-    } catch {
+    } catch (e) {
+      const timedOut = e instanceof DOMException && e.name === "AbortError";
       setPhase({
         name: "error",
-        message: "Something went wrong. Please try again.",
+        message: timedOut
+          ? "That took too long — check your connection and try again."
+          : "Something went wrong. Please try again.",
       });
     }
   }
@@ -143,11 +170,15 @@ export default function HomeFlow({
         day: "2-digit",
         year: "numeric",
       });
-      const res = await fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cards, date }),
-      });
+      const res = await fetchWithTimeout(
+        "/api/save",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cards, date, batchId: batchIdRef.current }),
+        },
+        45000
+      );
       const data = await res.json().catch(() => null);
 
       if (res.status === 409 && data?.error === "reauth") {
@@ -220,7 +251,11 @@ export default function HomeFlow({
 
   if (phase.name === "processing" || phase.name === "saving") {
     return (
-      <div className="my-auto flex flex-col items-center gap-6">
+      <div
+        role="status"
+        aria-live="polite"
+        className="my-auto flex flex-col items-center gap-6"
+      >
         <div
           className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"
           aria-hidden="true"
@@ -229,7 +264,9 @@ export default function HomeFlow({
           {phase.name === "processing" ? "Processing Image..." : "Saving..."}
         </p>
         {phase.name === "processing" && (
-          <p className="text-sm opacity-60">Reading every card in your photo</p>
+          <p className="text-sm text-slate-500">
+            Reading every card in your photo
+          </p>
         )}
       </div>
     );
@@ -240,13 +277,13 @@ export default function HomeFlow({
       <div className="flex w-full max-w-xs flex-col items-center gap-4 text-center">
         {fileInputs}
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl dark:bg-green-950"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl"
           aria-hidden="true"
         >
           ✓
         </div>
         <h1 className="text-2xl font-bold">Success</h1>
-        <p className="opacity-70">
+        <p className="text-slate-600">
           {phase.count} of {phase.count} cards saved.
         </p>
         {sheetUrl && (
@@ -254,28 +291,22 @@ export default function HomeFlow({
             href={sheetUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-sm text-blue-600 underline dark:text-blue-400"
+            className="text-sm text-blue-600 underline"
           >
             View them in your sheet
           </a>
         )}
-        <p className="text-sm opacity-60">
+        <p className="text-sm text-slate-500">
           Tip: several cards fit in one photo.
         </p>
-        <button
-          onClick={() => cameraInput.current?.click()}
-          className="mt-4 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
-        >
+        <PrimaryButton className="mt-4" onClick={() => cameraInput.current?.click()}>
           Take Next Photo
-        </button>
-        <button
-          onClick={() => libraryInput.current?.click()}
-          className="w-full rounded-2xl border border-black/15 px-6 py-4 text-base font-medium transition active:scale-[0.98] dark:border-white/20"
-        >
+        </PrimaryButton>
+        <SecondaryButton onClick={() => libraryInput.current?.click()}>
           Choose Existing Photo
-        </button>
+        </SecondaryButton>
         {usage && !(subscribed && usage.kind === "trial") && (
-          <p className="text-xs opacity-60">
+          <p className="text-xs text-slate-500">
             {usage.kind === "trial"
               ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
               : `This billing month: ${usage.used} of ${usage.limit} uploads used`}
@@ -289,10 +320,8 @@ export default function HomeFlow({
     const failedCount = phase.failed.filter(Boolean).length;
     return (
       <div className="flex w-full max-w-md flex-col gap-4">
-        <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">
-          Save Failed
-        </h1>
-        <p className="text-sm opacity-70">
+        <h1 className="text-2xl font-bold text-red-700">Save Failed</h1>
+        <p className="text-sm text-slate-600">
           {failedCount} of {phase.cards.length}{" "}
           {failedCount === 1 ? "card" : "cards"} could not be written to your
           spreadsheet. The details are still shown below so you can copy them
@@ -303,35 +332,33 @@ export default function HomeFlow({
             key={i}
             className={`flex flex-col gap-1 rounded-2xl border p-4 text-sm ${
               phase.failed[i]
-                ? "border-red-400 dark:border-red-700"
-                : "border-black/10 opacity-60 dark:border-white/15"
+                ? "border-red-400"
+                : "border-slate-200 opacity-70"
             }`}
           >
             <p className="text-xs font-semibold uppercase tracking-wide">
               {phase.failed[i] ? (
-                <span className="text-red-700 dark:text-red-400">
-                  Not saved
-                </span>
+                <span className="text-red-700">Not saved</span>
               ) : (
-                <span className="opacity-60">Saved</span>
+                <span className="text-slate-500">Saved</span>
               )}
             </p>
             <p>
-              <span className="opacity-60">Vendor:</span> {card.vendor}
+              <span className="text-slate-500">Vendor:</span> {card.vendor}
             </p>
             <p className="break-all">
-              <span className="opacity-60">Card Number:</span>{" "}
+              <span className="text-slate-500">Card Number:</span>{" "}
               {card.card_number}
             </p>
             <p>
-              <span className="opacity-60">PIN:</span> {card.pin}
+              <span className="text-slate-500">PIN:</span> {card.pin}
             </p>
             <p>
-              <span className="opacity-60">Value:</span> {card.value}
+              <span className="text-slate-500">Value:</span> {card.value}
             </p>
             {card.expiration && (
               <p>
-                <span className="opacity-60">Expiration:</span>{" "}
+                <span className="text-slate-500">Expiration:</span>{" "}
                 {card.expiration}
               </p>
             )}
@@ -441,7 +468,8 @@ export default function HomeFlow({
             />
           </div>
         ))}
-        <button
+        <PrimaryButton
+          className="mt-2"
           onClick={() => {
             if (missingValue.some(Boolean)) {
               setPhase({ ...phase, attempted: true });
@@ -449,16 +477,15 @@ export default function HomeFlow({
             }
             saveCards(phase.cards);
           }}
-          className="mt-2 w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-semibold text-white shadow-md transition active:scale-[0.98]"
         >
           Approve &amp; Save
-        </button>
-        <p className="text-center text-xs opacity-50">
+        </PrimaryButton>
+        <p className="text-center text-xs text-slate-500">
           Card details are never stored — they go only to your sheet.
         </p>
         <button
           onClick={() => setPhase({ name: "home" })}
-          className="text-center text-sm opacity-60 underline"
+          className="text-center text-sm text-slate-500 underline"
         >
           Cancel
         </button>
@@ -542,18 +569,15 @@ export default function HomeFlow({
       </p>
 
       {/* Primary actions */}
-      <button
+      <PrimaryButton
+        className="py-5 text-lg"
         onClick={() => cameraInput.current?.click()}
-        className="w-full rounded-2xl bg-blue-600 px-6 py-5 text-lg font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.3)] transition active:scale-[0.98]"
       >
-        📷 Take Photo
-      </button>
-      <button
-        onClick={() => libraryInput.current?.click()}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-900 transition active:scale-[0.98]"
-      >
+        <span aria-hidden="true">📷</span> Take Photo
+      </PrimaryButton>
+      <SecondaryButton onClick={() => libraryInput.current?.click()}>
         Choose Existing Photo
-      </button>
+      </SecondaryButton>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -641,16 +665,19 @@ export default function HomeFlow({
         )}
       </div>
 
-      <p className="mt-1 text-center text-xs text-slate-400">
+      <p className="mt-1 text-center text-xs text-slate-500">
         Photos &amp; card details are never stored — they go only to your
         sheet.
       </p>
-      <button
-        onClick={signOut}
-        className="mt-2 text-center text-xs text-slate-400 underline"
-      >
-        Sign out
-      </button>
+      <div className="mt-2 flex items-center justify-center gap-4">
+        <SupportLink />
+        <button
+          onClick={signOut}
+          className="text-xs font-medium text-slate-500 underline"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
@@ -670,7 +697,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-wide opacity-60">
+      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </span>
       <input
@@ -678,17 +705,18 @@ function Field({
         value={value}
         inputMode={inputMode}
         onChange={(e) => onChange(e.target.value)}
-        className={`rounded-lg border px-3 py-2 text-base dark:bg-transparent ${
-          error
-            ? "border-red-500 dark:border-red-600"
-            : "border-black/15 dark:border-white/20"
+        // Gift card numbers/PINs must never be stored by the browser
+        // (autofill / keyboard history), and generic names avoid triggering
+        // credit-card autofill.
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        className={`rounded-xl border px-3 py-2 text-base ${
+          error ? "border-red-500" : "border-slate-300"
         }`}
       />
-      {error && (
-        <span className="text-xs text-red-700 dark:text-red-400">
-          Required
-        </span>
-      )}
+      {error && <span className="text-xs text-red-700">Required</span>}
     </label>
   );
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { SupportLink } from "@/components/ui";
+import DemoModal from "./demo-modal";
 
 // Public marketing page shown to signed-out visitors at the root.
 // Mobile-first; scales up with a centered max-width column.
@@ -36,7 +38,7 @@ const STEPS = [
 ];
 
 const TIERS = [
-  { name: "Basic", detail: "100 uploads / month", popular: false },
+  { name: "Basic", detail: "50 uploads / month", popular: false },
   { name: "Pro", detail: "250 uploads / month", popular: true },
   { name: "Unlimited", detail: "Unlimited uploads", popular: false },
 ];
@@ -68,11 +70,9 @@ export default function Landing() {
           its details, then adds every row to your Google Sheet all at once.
           Works for Visa, Mastercard, and virtually any store gift card.
         </p>
-        <div className="mt-6 flex flex-col gap-2.5">
+        <div className="mt-6 flex flex-col items-center gap-2.5">
           <CtaButton />
-          <span className="py-1.5 text-[15px] font-bold text-blue-600">
-            Watch 30s demo ▸
-          </span>
+          <DemoModal label="Watch 30s demo ▸" />
         </div>
         <TrustLine />
 
@@ -184,7 +184,7 @@ export default function Landing() {
                       : "bg-blue-50 text-blue-600"
                   }`}
                 >
-                  Start free
+                  Start free trial
                 </Link>
               </div>
             ))}
@@ -210,18 +210,19 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-100 px-5 py-5 text-center text-xs font-semibold text-slate-400">
+      <footer className="border-t border-slate-100 px-5 py-5 text-center text-xs font-semibold text-slate-500">
         <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
           <span>Gift Card Snapper</span>
-          <span>
+          <span className="flex flex-wrap items-center justify-center gap-x-2">
             <Link href="/privacy" className="underline">
               Privacy
-            </Link>{" "}
-            ·{" "}
+            </Link>
+            <span aria-hidden="true">·</span>
             <Link href="/terms" className="underline">
               Terms
-            </Link>{" "}
-            · support@giftcardsnapper.com
+            </Link>
+            <span aria-hidden="true">·</span>
+            <SupportLink />
           </span>
         </div>
       </footer>

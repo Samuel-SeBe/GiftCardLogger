@@ -6,6 +6,7 @@ import {
   GOOGLE_OAUTH_RECONSENT_QUERY_PARAMS,
   GOOGLE_OAUTH_SCOPES,
 } from "@/lib/google-oauth";
+import { SupportLink } from "@/components/ui";
 
 // Shown when the app can't access Google Sheets — either the permission
 // was never granted (the easy-to-miss checkbox on Google's consent
@@ -77,6 +78,7 @@ export default function ReconnectPage() {
       >
         {loading ? "Redirecting…" : "Try Again with Google"}
       </button>
+      <SupportLink className="mt-2" />
     </main>
   );
 }

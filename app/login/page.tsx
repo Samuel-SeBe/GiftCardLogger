@@ -8,6 +8,7 @@ import {
   GOOGLE_OAUTH_SCOPES,
 } from "@/lib/google-oauth";
 import { Logo } from "@/components/logo";
+import { SupportLink } from "@/components/ui";
 
 function LoginContent() {
   const [loading, setLoading] = useState(false);
@@ -72,19 +73,21 @@ function LoginContent() {
         {loading ? "Redirecting…" : "Sign in with Google"}
       </button>
 
-      <p className="max-w-xs text-center text-xs opacity-50">
+      <p className="max-w-xs text-center text-xs text-slate-500">
         Your card details are never stored by this app — they go straight to
         a Google Sheet in your own Drive.
       </p>
 
-      <p className="text-xs opacity-40">
+      <p className="flex flex-wrap items-center justify-center gap-x-2 text-xs text-slate-500">
         <a href="/privacy" className="underline">
           Privacy
         </a>
-        {" · "}
+        <span aria-hidden="true">·</span>
         <a href="/terms" className="underline">
           Terms
         </a>
+        <span aria-hidden="true">·</span>
+        <SupportLink />
       </p>
     </main>
   );
