@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { Logo } from "@/components/logo";
 import { SupportLink } from "@/components/ui";
+import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { priceIdFor, type PlanId } from "@/lib/plans";
 import DemoModal from "./demo-modal";
 
 // Public marketing page shown to signed-out visitors at the root.
@@ -37,13 +40,51 @@ const STEPS = [
   { n: "3", title: "Save", body: "Tap once; every row appears in your Sheet." },
 ];
 
-const TIERS = [
-  { name: "Basic", detail: "50 snaps / month", popular: false },
-  { name: "Pro", detail: "250 snaps / month", popular: true },
-  { name: "Unlimited", detail: "Unlimited snaps", popular: false },
+const TIERS: {
+  plan: PlanId;
+  name: string;
+  detail: string;
+  popular: boolean;
+}[] = [
+  { plan: "basic", name: "Basic", detail: "50 snaps / month", popular: false },
+  { plan: "pro", name: "Pro", detail: "250 snaps / month", popular: true },
+  {
+    plan: "unlimited",
+    name: "Unlimited",
+    detail: "Unlimited snaps",
+    popular: false,
+  },
 ];
 
-export default function Landing() {
+// Look up each tier's live price from Stripe so the landing page always
+// shows what subscribers actually pay. Cached for an hour so the public
+// homepage doesn't call Stripe on every visit; prices change rarely.
+// Falls back to no price on any error.
+const loadPrices = unstable_cache(
+  async (): Promise<Partial<Record<PlanId, string>>> => {
+    const prices: Partial<Record<PlanId, string>> = {};
+    if (!stripeConfigured()) return prices;
+    try {
+      const stripe = getStripe();
+      await Promise.all(
+        TIERS.map(async ({ plan }) => {
+          const price = await stripe.prices.retrieve(priceIdFor(plan));
+          if (price.unit_amount) {
+            prices[plan] = `$${(price.unit_amount / 100).toFixed(2)}`;
+          }
+        })
+      );
+    } catch (e) {
+      console.error("Failed to load Stripe prices on landing:", e);
+    }
+    return prices;
+  },
+  ["landing-stripe-prices"],
+  { revalidate: 3600, tags: ["stripe-prices"] }
+);
+
+export default async function Landing() {
+  const prices = await loadPrices();
   return (
     <div className="flex flex-1 flex-col bg-white text-slate-900">
       {/* Header */}
@@ -172,6 +213,14 @@ export default function Landing() {
                 )}
                 <div className="flex items-baseline justify-between">
                   <span className="text-lg font-extrabold">{t.name}</span>
+                  {prices[t.plan] && (
+                    <span className="text-lg font-extrabold">
+                      {prices[t.plan]}
+                      <span className="text-xs font-semibold text-slate-500">
+                        /mo
+                      </span>
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 text-sm font-semibold text-slate-500">
                   {t.detail}

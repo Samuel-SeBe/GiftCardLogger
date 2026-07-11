@@ -156,7 +156,7 @@ export default function ReferralPage() {
       )}
 
       <div className="mt-4 flex items-center gap-4">
-        <Link href="/" className="text-sm font-medium text-slate-500 underline">
+        <Link href="/" className="text-xs font-medium text-slate-500 underline">
           ← Back
         </Link>
         <SupportLink />

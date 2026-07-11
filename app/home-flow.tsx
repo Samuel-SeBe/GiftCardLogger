@@ -562,11 +562,39 @@ export default function HomeFlow({
         </p>
       )}
 
-      {/* Instruction */}
-      <p className="text-center text-sm text-slate-600">
-        Snap a photo of one or more gift cards with the card number and PIN
-        clearly visible.
-      </p>
+      {/* Quick guide */}
+      <ol className="flex flex-col gap-2.5">
+        {[
+          <>
+            Snap a photo of one or more gift cards with the card number and PIN
+            clearly visible.
+          </>,
+          <>Confirm the card details.</>,
+          sheetUrl ? (
+            <>
+              Card details are uploaded to your{" "}
+              <a
+                href={sheetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-blue-600 underline"
+              >
+                Google Sheet
+              </a>
+              .
+            </>
+          ) : (
+            <>Card details are uploaded to your Google Sheet.</>
+          ),
+        ].map((step, i) => (
+          <li key={i} className="flex items-start gap-2.5">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">
+              {i + 1}
+            </span>
+            <span className="text-sm leading-snug text-slate-600">{step}</span>
+          </li>
+        ))}
+      </ol>
       <p className="text-center text-xs text-slate-500">
         Photos &amp; card details are never stored, they only go to your sheet.
       </p>
@@ -599,11 +627,19 @@ export default function HomeFlow({
                   style={{ width: `${usagePct}%` }}
                 />
               </div>
+              <div className="mt-2 text-[11px] font-semibold text-slate-400">
+                Up to 10 cards per snap
+              </div>
             </>
           ) : (
-            <div className="mt-1 text-xs font-semibold text-green-600">
-              Unlimited snaps ✓
-            </div>
+            <>
+              <div className="mt-1 text-xs font-semibold text-green-600">
+                Unlimited snaps ✓
+              </div>
+              <div className="mt-2 text-[11px] font-semibold text-slate-400">
+                Up to 10 cards per snap
+              </div>
+            </>
           )}
         </div>
 
@@ -616,7 +652,7 @@ export default function HomeFlow({
         >
           <div className="text-[13px] font-extrabold">Your Sheet</div>
           <div className="mt-1 text-xs font-semibold text-blue-600">
-            Open in Sheets ▸
+            Open in Google Sheets
           </div>
           <div className="mt-2 text-[11px] font-semibold text-slate-400">
             Gift Card Inventory
@@ -668,14 +704,11 @@ export default function HomeFlow({
         )}
       </div>
 
-      <p className="mt-1 text-center text-xs font-semibold text-slate-600">
-        Remember: each snap can contain up to 10 cards!
-      </p>
       <div className="mt-2 flex items-center justify-center gap-4">
         <SupportLink />
         <button
           onClick={signOut}
-          className="text-xs font-medium text-slate-500 underline"
+          className="cursor-pointer text-xs font-medium text-slate-500 underline"
         >
           Sign out
         </button>
