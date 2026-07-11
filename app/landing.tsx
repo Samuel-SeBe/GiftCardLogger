@@ -38,9 +38,9 @@ const STEPS = [
 ];
 
 const TIERS = [
-  { name: "Basic", detail: "50 uploads / month", popular: false },
-  { name: "Pro", detail: "250 uploads / month", popular: true },
-  { name: "Unlimited", detail: "Unlimited uploads", popular: false },
+  { name: "Basic", detail: "50 snaps / month", popular: false },
+  { name: "Pro", detail: "250 snaps / month", popular: true },
+  { name: "Unlimited", detail: "Unlimited snaps", popular: false },
 ];
 
 export default function Landing() {

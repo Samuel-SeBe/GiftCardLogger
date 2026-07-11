@@ -62,7 +62,7 @@ export default async function SubscribePage({
     <main className="flex flex-1 flex-col items-center gap-5 p-6 pt-[6vh] text-center">
       <h1 className="text-2xl font-bold">
         {hitPlanLimit
-          ? `You've used this month's ${PLANS[currentPlan].name} uploads`
+          ? `You've used this month's ${PLANS[currentPlan].name} snaps`
           : "Your free trial is complete"}
       </h1>
       <p className="max-w-xs text-sm opacity-70">
@@ -108,8 +108,8 @@ export default async function SubscribePage({
                 </div>
                 <p className="text-left text-xs opacity-70">
                   {cap === null
-                    ? "Unlimited uploads"
-                    : `${cap} uploads per month`}
+                    ? "Unlimited snaps"
+                    : `${cap} snaps per month`}
                 </p>
                 {isCurrent ? (
                   <p className="rounded-xl bg-black/5 py-2 text-xs font-medium opacity-70 dark:bg-white/10">

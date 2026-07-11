@@ -103,7 +103,7 @@ export default function HomeFlow({
         setPhase({
           name: "error",
           message:
-            "That photo is too large to process. Tip: use Take Photo (it shrinks the image for you), or take a screenshot of the picture and upload the screenshot — screenshots are much smaller.",
+            "That photo is too large to process. Tip: snap the card directly (that shrinks the image for you), or take a screenshot of the picture and use that instead — screenshots are much smaller.",
         });
         return;
       }
@@ -308,8 +308,8 @@ export default function HomeFlow({
         {usage && !(subscribed && usage.kind === "trial") && (
           <p className="text-xs text-slate-500">
             {usage.kind === "trial"
-              ? `Free trial: ${usage.used} of ${usage.limit} uploads used`
-              : `This billing month: ${usage.used} of ${usage.limit} uploads used`}
+              ? `Free trial: ${usage.used} of ${usage.limit} snaps used`
+              : `This billing month: ${usage.used} of ${usage.limit} snaps used`}
           </p>
         )}
       </div>
@@ -537,7 +537,7 @@ export default function HomeFlow({
             {planName ? `You're on the ${planName} plan!` : "You're subscribed!"}
           </p>
           <p className="text-xs text-green-800 opacity-80">
-            Snap away — your uploads are unlocked.
+            Snap away — you&apos;re all set.
           </p>
           <button
             onClick={() => setShowSubBanner(false)}
@@ -564,8 +564,11 @@ export default function HomeFlow({
 
       {/* Instruction */}
       <p className="text-center text-sm text-slate-600">
-        Take a photo of one or more gift cards with the card number and PIN
+        Snap a photo of one or more gift cards with the card number and PIN
         clearly visible.
+      </p>
+      <p className="text-center text-xs text-slate-500">
+        Photos &amp; card details are never stored, they only go to your sheet.
       </p>
 
       {/* Primary actions */}
@@ -573,7 +576,7 @@ export default function HomeFlow({
         className="py-5 text-lg"
         onClick={() => cameraInput.current?.click()}
       >
-        <span aria-hidden="true">📷</span> Take Photo
+        <span aria-hidden="true">📷</span> Snap your card(s)
       </PrimaryButton>
       <SecondaryButton onClick={() => libraryInput.current?.click()}>
         Choose Existing Photo
@@ -588,7 +591,7 @@ export default function HomeFlow({
             <>
               <div className="mt-1 text-xs font-semibold text-slate-500">
                 {usage.kind === "trial" ? "Free trial" : "This month"} ·{" "}
-                {usageLabel}
+                {usageLabel} snaps
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
                 <div
@@ -599,7 +602,7 @@ export default function HomeFlow({
             </>
           ) : (
             <div className="mt-1 text-xs font-semibold text-green-600">
-              Unlimited ✓
+              Unlimited snaps ✓
             </div>
           )}
         </div>
@@ -665,9 +668,8 @@ export default function HomeFlow({
         )}
       </div>
 
-      <p className="mt-1 text-center text-xs text-slate-500">
-        Photos &amp; card details are never stored — they go only to your
-        sheet.
+      <p className="mt-1 text-center text-xs font-semibold text-slate-600">
+        Remember: each snap can contain up to 10 cards!
       </p>
       <div className="mt-2 flex items-center justify-center gap-4">
         <SupportLink />
