@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  GOOGLE_OAUTH_QUERY_PARAMS,
+  GOOGLE_OAUTH_RECONSENT_QUERY_PARAMS,
   GOOGLE_OAUTH_SCOPES,
 } from "@/lib/google-oauth";
 import { SupportLink } from "@/components/ui";
@@ -23,7 +23,7 @@ export default function ReconnectPage() {
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         scopes: GOOGLE_OAUTH_SCOPES,
-        queryParams: GOOGLE_OAUTH_QUERY_PARAMS,
+        queryParams: GOOGLE_OAUTH_RECONSENT_QUERY_PARAMS,
       },
     });
     if (error) setLoading(false);
