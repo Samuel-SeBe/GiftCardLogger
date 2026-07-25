@@ -67,6 +67,31 @@ export default function HomeFlow({
   const [usage, setUsage] = useState<Usage>(initialUsage);
   const [showSubBanner, setShowSubBanner] = useState(justSubscribed);
   const [truncated, setTruncated] = useState(false);
+  // Independent space preferences for the review screen: whether codes are
+  // shown grouped, and whether they're saved grouped. Both default on (the
+  // original behavior) and are remembered across snaps via localStorage. The
+  // toggles only render in the review phase, so reading storage during the
+  // initial (home) render causes no hydration mismatch.
+  const [showSpaces, setShowSpaces] = useState(() =>
+    readSpacePref("gcs_show_spaces")
+  );
+  const [saveSpaces, setSaveSpaces] = useState(() =>
+    readSpacePref("gcs_save_spaces")
+  );
+  function toggleShowSpaces() {
+    setShowSpaces((prev) => {
+      const next = !prev;
+      localStorage.setItem("gcs_show_spaces", next ? "1" : "0");
+      return next;
+    });
+  }
+  function toggleSaveSpaces() {
+    setSaveSpaces((prev) => {
+      const next = !prev;
+      localStorage.setItem("gcs_save_spaces", next ? "1" : "0");
+      return next;
+    });
+  }
   // Which card's Value field was edited last — anchors the "apply to all
   // cards" suggestion chip.
   const [lastValueEdit, setLastValueEdit] = useState<number | null>(null);
@@ -296,6 +321,10 @@ export default function HomeFlow({
             View them in your sheet
           </a>
         )}
+        <p className="max-w-xs text-xs text-slate-500">
+          Note: on mobile you may need to exit and re-enter your Google Sheet to
+          see the new rows.
+        </p>
         <p className="text-sm text-slate-500">
           Tip: several cards fit in one photo.
         </p>
@@ -387,6 +416,18 @@ export default function HomeFlow({
         <p className="text-sm opacity-70">
           Check each field against the card, then save.
         </p>
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <Toggle
+            label="Show spaces in codes"
+            checked={showSpaces}
+            onChange={toggleShowSpaces}
+          />
+          <Toggle
+            label="Save spaces in codes"
+            checked={saveSpaces}
+            onChange={toggleSaveSpaces}
+          />
+        </div>
         {truncated && (
           <p className="rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
             We captured the first 10 cards from this photo. Snap any extras
@@ -410,12 +451,12 @@ export default function HomeFlow({
             />
             <Field
               label="Card Number"
-              value={card.card_number}
+              value={showSpaces ? card.card_number : stripSpaces(card.card_number)}
               onChange={(v) => updateCard(i, "card_number", v)}
             />
             <Field
               label="PIN"
-              value={card.pin}
+              value={showSpaces ? card.pin : stripSpaces(card.pin)}
               onChange={(v) => updateCard(i, "pin", v)}
             />
             <Field
@@ -475,7 +516,14 @@ export default function HomeFlow({
               setPhase({ ...phase, attempted: true });
               return;
             }
-            saveCards(phase.cards);
+            const cards = saveSpaces
+              ? phase.cards
+              : phase.cards.map((c) => ({
+                  ...c,
+                  card_number: stripSpaces(c.card_number),
+                  pin: stripSpaces(c.pin),
+                }));
+            saveCards(cards);
           }}
         >
           Approve &amp; Save
@@ -714,6 +762,51 @@ export default function HomeFlow({
         </button>
       </div>
     </div>
+  );
+}
+
+// Removes whitespace only, so grouped codes collapse (e.g. "6050 1234" ->
+// "60501234") while dashes in claim codes (Amazon/DoorDash) are preserved.
+function stripSpaces(value: string): string {
+  return value.replace(/\s+/g, "");
+}
+
+// Reads a saved space preference, defaulting to on (grouped) when unset.
+function readSpacePref(key: string): boolean {
+  if (typeof window === "undefined") return true;
+  return localStorage.getItem(key) !== "0";
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className="flex cursor-pointer items-center justify-between gap-3 text-left"
+    >
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+          checked ? "bg-blue-600" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+            checked ? "translate-x-[22px]" : "translate-x-0.5"
+          }`}
+        />
+      </span>
+    </button>
   );
 }
 
