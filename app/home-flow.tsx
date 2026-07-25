@@ -418,12 +418,14 @@ export default function HomeFlow({
         </p>
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <Toggle
-            label="Show spaces in codes"
+            label="Show spaces in card number"
+            help="Shows the card number and PIN grouped with spaces, as captured. Turn off to view them with spaces removed."
             checked={showSpaces}
             onChange={toggleShowSpaces}
           />
           <Toggle
-            label="Save spaces in codes"
+            label="Save spaces in card number"
+            help="Saves the card number and PIN to your sheet with spaces. Turn off to save them with spaces removed."
             checked={saveSpaces}
             onChange={toggleSaveSpaces}
           />
@@ -777,26 +779,56 @@ function readSpacePref(key: string): boolean {
   return localStorage.getItem(key) !== "0";
 }
 
+// A small "?" that reveals a short explanation on tap (mobile) or click.
+function HelpTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        aria-label="What does this mean?"
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        className="flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold leading-none text-slate-500"
+      >
+        ?
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute left-1/2 top-6 z-10 w-52 -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-left text-xs font-normal leading-snug text-white shadow-lg"
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Toggle({
   label,
+  help,
   checked,
   onChange,
 }: {
   label: string;
+  help: string;
   checked: boolean;
   onChange: () => void;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={onChange}
-      className="flex cursor-pointer items-center justify-between gap-3 text-left"
-    >
-      <span className="text-sm font-medium text-slate-700">{label}</span>
-      <span
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+    <div className="flex items-center justify-between gap-3">
+      <span className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+        {label}
+        <HelpTip text={help} />
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={onChange}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition ${
           checked ? "bg-blue-600" : "bg-slate-300"
         }`}
       >
@@ -805,8 +837,8 @@ function Toggle({
             checked ? "translate-x-[22px]" : "translate-x-0.5"
           }`}
         />
-      </span>
-    </button>
+      </button>
+    </div>
   );
 }
 
