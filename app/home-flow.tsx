@@ -73,10 +73,10 @@ export default function HomeFlow({
   // toggles only render in the review phase, so reading storage during the
   // initial (home) render causes no hydration mismatch.
   const [showSpaces, setShowSpaces] = useState(() =>
-    readSpacePref("gcs_show_spaces")
+    readSpacePref("gcs_show_spaces", true)
   );
   const [saveSpaces, setSaveSpaces] = useState(() =>
-    readSpacePref("gcs_save_spaces")
+    readSpacePref("gcs_save_spaces", false)
   );
   function toggleShowSpaces() {
     setShowSpaces((prev) => {
@@ -454,6 +454,13 @@ export default function HomeFlow({
             <Field
               label="Card Number"
               value={showSpaces ? card.card_number : stripSpaces(card.card_number)}
+              displayValue={
+                showSpaces &&
+                !/[\s-]/.test(card.card_number) &&
+                card.card_number.length > 4
+                  ? groupFour(card.card_number)
+                  : undefined
+              }
               onChange={(v) => updateCard(i, "card_number", v)}
             />
             <Field
@@ -773,10 +780,17 @@ function stripSpaces(value: string): string {
   return value.replace(/\s+/g, "");
 }
 
-// Reads a saved space preference, defaulting to on (grouped) when unset.
-function readSpacePref(key: string): boolean {
-  if (typeof window === "undefined") return true;
-  return localStorage.getItem(key) !== "0";
+// Reads a saved space preference, falling back to the given default when unset.
+function readSpacePref(key: string, fallback: boolean): boolean {
+  if (typeof window === "undefined") return fallback;
+  const stored = localStorage.getItem(key);
+  return stored === null ? fallback : stored === "1";
+}
+
+// Inserts a space every 4 characters for readability (review display only,
+// never saved). Used for card numbers that have no spaces or dashes.
+function groupFour(value: string): string {
+  return value.replace(/(.{4})/g, "$1 ").trim();
 }
 
 // A small "?" that reveals a short explanation on tap (mobile) or click.
@@ -848,13 +862,20 @@ function Field({
   onChange,
   inputMode,
   error,
+  displayValue,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   inputMode?: "decimal";
   error?: boolean;
+  // Optional read-friendly rendering (e.g. grouped card number) shown only
+  // while the field isn't focused; editing always uses the raw value so the
+  // caret behaves normally.
+  displayValue?: string;
 }) {
+  const [focused, setFocused] = useState(false);
+  const shown = !focused && displayValue !== undefined ? displayValue : value;
   return (
     <label className="flex flex-col gap-1">
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -862,8 +883,10 @@ function Field({
       </span>
       <input
         type="text"
-        value={value}
+        value={shown}
         inputMode={inputMode}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         onChange={(e) => onChange(e.target.value)}
         // Gift card numbers/PINs must never be stored by the browser
         // (autofill / keyboard history), and generic names avoid triggering
