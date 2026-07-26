@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { groupCardNumber, stripSpaces } from "@/lib/format";
 import { PrimaryButton, SecondaryButton, SupportLink } from "@/components/ui";
 
 // fetch with an abort timeout so a stalled network can't hang the UI.
@@ -156,11 +157,10 @@ export default function HomeFlow({
       // Group spaceless card numbers every 4 chars for easier review. The
       // spaces live in the field value and are stripped on save when the
       // "Save spaces" toggle is off (the default).
-      const cards: Card[] = data.cards.map((c: Card) => {
-        const n = c.card_number;
-        const grouped = /[\s-]/.test(n) || n.length <= 4 ? n : groupFour(n);
-        return { ...c, card_number: grouped };
-      });
+      const cards: Card[] = data.cards.map((c: Card) => ({
+        ...c,
+        card_number: groupCardNumber(c.card_number),
+      }));
       setPhase({ name: "review", cards });
     } catch (e) {
       const timedOut = e instanceof DOMException && e.name === "AbortError";
@@ -775,23 +775,11 @@ export default function HomeFlow({
   );
 }
 
-// Removes whitespace only, so grouped codes collapse (e.g. "6050 1234" ->
-// "60501234") while dashes in claim codes (Amazon/DoorDash) are preserved.
-function stripSpaces(value: string): string {
-  return value.replace(/\s+/g, "");
-}
-
 // Reads a saved space preference, falling back to the given default when unset.
 function readSpacePref(key: string, fallback: boolean): boolean {
   if (typeof window === "undefined") return fallback;
   const stored = localStorage.getItem(key);
   return stored === null ? fallback : stored === "1";
-}
-
-// Inserts a space every 4 characters for readability (review display only,
-// never saved). Used for card numbers that have no spaces or dashes.
-function groupFour(value: string): string {
-  return value.replace(/(.{4})/g, "$1 ").trim();
 }
 
 // A small "?" that reveals a short explanation on tap (mobile) or click.
