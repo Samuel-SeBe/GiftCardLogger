@@ -153,7 +153,15 @@ export default function HomeFlow({
       setTruncated(Boolean(data.truncated));
       setLastValueEdit(null);
       batchIdRef.current = crypto.randomUUID();
-      setPhase({ name: "review", cards: data.cards });
+      // Group spaceless card numbers every 4 chars for easier review. The
+      // spaces live in the field value and are stripped on save when the
+      // "Save spaces" toggle is off (the default).
+      const cards: Card[] = data.cards.map((c: Card) => {
+        const n = c.card_number;
+        const grouped = /[\s-]/.test(n) || n.length <= 4 ? n : groupFour(n);
+        return { ...c, card_number: grouped };
+      });
+      setPhase({ name: "review", cards });
     } catch (e) {
       const timedOut = e instanceof DOMException && e.name === "AbortError";
       setPhase({
@@ -454,13 +462,6 @@ export default function HomeFlow({
             <Field
               label="Card Number"
               value={showSpaces ? card.card_number : stripSpaces(card.card_number)}
-              displayValue={
-                showSpaces &&
-                !/[\s-]/.test(card.card_number) &&
-                card.card_number.length > 4
-                  ? groupFour(card.card_number)
-                  : undefined
-              }
               onChange={(v) => updateCard(i, "card_number", v)}
             />
             <Field
@@ -862,20 +863,13 @@ function Field({
   onChange,
   inputMode,
   error,
-  displayValue,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   inputMode?: "decimal";
   error?: boolean;
-  // Optional read-friendly rendering (e.g. grouped card number) shown only
-  // while the field isn't focused; editing always uses the raw value so the
-  // caret behaves normally.
-  displayValue?: string;
 }) {
-  const [focused, setFocused] = useState(false);
-  const shown = !focused && displayValue !== undefined ? displayValue : value;
   return (
     <label className="flex flex-col gap-1">
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -883,10 +877,8 @@ function Field({
       </span>
       <input
         type="text"
-        value={shown}
+        value={value}
         inputMode={inputMode}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         onChange={(e) => onChange(e.target.value)}
         // Gift card numbers/PINs must never be stored by the browser
         // (autofill / keyboard history), and generic names avoid triggering
